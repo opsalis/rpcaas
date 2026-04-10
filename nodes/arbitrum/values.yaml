@@ -1,0 +1,39 @@
+# Arbitrum One full node configuration
+# Runs Nitro node (single container, execution + consensus combined)
+
+replicaCount: 1
+
+nitro:
+  image:
+    repository: offchainlabs/nitro-node
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "4Gi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
+  ports:
+    rpc: 8547
+    ws: 8548
+
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  size: 300Gi
+  mountPath: /data
+  hostPath: /mnt/chains/arbitrum
+
+nodeSelector:
+  role: rpc
+
+service:
+  type: ClusterIP
+  port: 8547
+
+# Arbitrum requires L1 RPC for validation
+l1RpcUrl: "http://ethereum-node.rpcaas.svc.cluster.local:8545"
+l1Beacon: ""
+chainId: 42161

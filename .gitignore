@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+
+# Proxy build artifacts
+proxy/node_modules/
+proxy/dist/
+proxy/package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

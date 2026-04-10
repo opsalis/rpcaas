@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ethereum-node
+  namespace: rpcaas
+  labels:
+    app: ethereum-node
+    chain: ethereum
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ethereum-node
+  template:
+    metadata:
+      labels:
+        app: ethereum-node
+        chain: ethereum
+    spec:
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        # Geth: Execution client
+        - name: geth
+          image: "{{ .Values.geth.image.repository }}:{{ .Values.geth.image.tag }}"
+          imagePullPolicy: {{ .Values.geth.image.pullPolicy }}
+          args:
+            - --{{ .Values.network }}
+            - --http
+            - --http.addr=0.0.0.0
+            - --http.port={{ .Values.geth.ports.rpc }}
+            - --http.corsdomain=*
+            - --http.vhosts=*
+            - --http.api=eth,net,web3,debug,txpool
+            - --ws
+            - --ws.addr=0.0.0.0
+            - --ws.port={{ .Values.geth.ports.ws }}
+            - --ws.origins=*
+            - --ws.api=eth,net,web3,debug,txpool
+            - --syncmode=snap
+            - --gcmode=full
+            - --datadir=/data/geth
+            - --authrpc.addr=0.0.0.0
+            - --authrpc.port={{ .Values.geth.ports.authrpc }}
+            - --authrpc.jwtsecret=/data/jwt.hex
+            - --authrpc.vhosts=*
+            - --maxpeers=50
+            - --cache=4096
+          ports:
+            - containerPort: {{ .Values.geth.ports.rpc }}
+              name: rpc
+            - containerPort: {{ .Values.geth.ports.ws }}
+              name: ws
+            - containerPort: {{ .Values.geth.ports.authrpc }}
+              name: authrpc
+            - containerPort: {{ .Values.geth.ports.p2p }}
+              name: p2p-tcp
+              protocol: TCP
+            - containerPort: {{ .Values.geth.ports.p2p }}
+              name: p2p-udp
+              protocol: UDP
+          resources:
+            {{- toYaml .Values.geth.resources | nindent 12 }}
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+
+        # Lighthouse: Consensus client (beacon node)
+        - name: lighthouse
+          image: "{{ .Values.lighthouse.image.repository }}:{{ .Values.lighthouse.image.tag }}"
+          imagePullPolicy: {{ .Values.lighthouse.image.pullPolicy }}
+          args:
+            - lighthouse
+            - bn
+            - --network={{ .Values.network }}
+            - --datadir=/data/lighthouse
+            - --http
+            - --http-address=0.0.0.0
+            - --http-port={{ .Values.lighthouse.ports.http }}
+            - --execution-endpoint=http://localhost:{{ .Values.geth.ports.authrpc }}
+            - --execution-jwt=/data/jwt.hex
+            - --checkpoint-sync-url={{ .Values.lighthouse.checkpointSyncUrl }}
+            - --disable-deposit-contract-sync
+          ports:
+            - containerPort: {{ .Values.lighthouse.ports.http }}
+              name: beacon-http
+            - containerPort: {{ .Values.lighthouse.ports.p2p }}
+              name: beacon-p2p-tcp
+              protocol: TCP
+            - containerPort: {{ .Values.lighthouse.ports.p2p }}
+              name: beacon-p2p-udp
+              protocol: UDP
+          resources:
+            {{- toYaml .Values.lighthouse.resources | nindent 12 }}
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+
+      initContainers:
+        - name: init-jwt
+          image: busybox:1.36
+          command: ['sh', '-c', 'test -f /data/jwt.hex || openssl rand -hex 32 > /data/jwt.hex']
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+
+      volumes:
+        - name: chain-data
+          persistentVolumeClaim:
+            claimName: ethereum-chain-data

@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: optimism-node
+  namespace: rpcaas
+  labels:
+    app: optimism-node
+    chain: optimism
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: optimism-node
+  template:
+    metadata:
+      labels:
+        app: optimism-node
+        chain: optimism
+    spec:
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        - name: op-geth
+          image: "{{ .Values.opGeth.image.repository }}:{{ .Values.opGeth.image.tag }}"
+          imagePullPolicy: {{ .Values.opGeth.image.pullPolicy }}
+          args:
+            - --op-network={{ .Values.network }}
+            - --http
+            - --http.addr=0.0.0.0
+            - --http.port={{ .Values.opGeth.ports.rpc }}
+            - --http.corsdomain=*
+            - --http.vhosts=*
+            - --http.api=eth,net,web3,debug,txpool
+            - --ws
+            - --ws.addr=0.0.0.0
+            - --ws.port={{ .Values.opGeth.ports.ws }}
+            - --ws.origins=*
+            - --ws.api=eth,net,web3,debug,txpool
+            - --syncmode=snap
+            - --gcmode=full
+            - --datadir=/data/geth
+            - --authrpc.addr=0.0.0.0
+            - --authrpc.port=8551
+            - --authrpc.jwtsecret=/data/jwt.hex
+            - --rollup.sequencerhttp=https://mainnet-sequencer.optimism.io
+            - --rollup.halt=major
+          ports:
+            - containerPort: {{ .Values.opGeth.ports.rpc }}
+              name: rpc
+            - containerPort: {{ .Values.opGeth.ports.ws }}
+              name: ws
+            - containerPort: 8551
+              name: authrpc
+          resources:
+            {{- toYaml .Values.opGeth.resources | nindent 12 }}
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+
+        - name: op-node
+          image: "{{ .Values.opNode.image.repository }}:{{ .Values.opNode.image.tag }}"
+          imagePullPolicy: {{ .Values.opNode.image.pullPolicy }}
+          args:
+            - op-node
+            - --network={{ .Values.network }}
+            - --l1={{ .Values.l1RpcUrl }}
+            - --l2=http://localhost:8551
+            - --l2.jwt-secret=/data/jwt.hex
+            - --rpc.addr=0.0.0.0
+            - --rpc.port={{ .Values.opNode.ports.rpc }}
+            - --l1.trustrpc
+          ports:
+            - containerPort: {{ .Values.opNode.ports.rpc }}
+              name: op-rpc
+          resources:
+            {{- toYaml .Values.opNode.resources | nindent 12 }}
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+
+      initContainers:
+        - name: init-jwt
+          image: busybox:1.36
+          command: ['sh', '-c', 'test -f /data/jwt.hex || openssl rand -hex 32 > /data/jwt.hex']
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+
+      volumes:
+        - name: chain-data
+          persistentVolumeClaim:
+            claimName: optimism-chain-data

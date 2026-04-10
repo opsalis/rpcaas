@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arbitrum-node
+  namespace: rpcaas
+  labels:
+    app: arbitrum-node
+    chain: arbitrum
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: arbitrum-node
+  template:
+    metadata:
+      labels:
+        app: arbitrum-node
+        chain: arbitrum
+    spec:
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      containers:
+        - name: nitro
+          image: "{{ .Values.nitro.image.repository }}:{{ .Values.nitro.image.tag }}"
+          imagePullPolicy: {{ .Values.nitro.image.pullPolicy }}
+          args:
+            - --parent-chain.connection.url={{ .Values.l1RpcUrl }}
+            - --chain.id={{ .Values.chainId }}
+            - --http.addr=0.0.0.0
+            - --http.port={{ .Values.nitro.ports.rpc }}
+            - --http.vhosts=*
+            - --http.corsdomain=*
+            - --http.api=net,web3,eth,debug
+            - --ws.addr=0.0.0.0
+            - --ws.port={{ .Values.nitro.ports.ws }}
+            - --ws.origins=*
+            - --ws.api=net,web3,eth,debug
+            - --persistent.chain=/data/arb
+            - --execution.caching.archive=false
+            - --node.feed.input.url=wss://arb1.arbitrum.io/feed
+          ports:
+            - containerPort: {{ .Values.nitro.ports.rpc }}
+              name: rpc
+            - containerPort: {{ .Values.nitro.ports.ws }}
+              name: ws
+          resources:
+            {{- toYaml .Values.nitro.resources | nindent 12 }}
+          volumeMounts:
+            - name: chain-data
+              mountPath: /data
+
+      volumes:
+        - name: chain-data
+          persistentVolumeClaim:
+            claimName: arbitrum-chain-data

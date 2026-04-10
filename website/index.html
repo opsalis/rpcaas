@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPCaaS - Multi-chain RPC Endpoints</title>
+  <meta name="description" content="Multi-chain RPC endpoints for blockchain developers. Base, Optimism, Arbitrum, Polygon, Ethereum. Pay with USDC. Free tier: 100K requests/day.">
+  <meta name="keywords" content="RPC endpoint, blockchain API, Base RPC, Optimism RPC, Arbitrum RPC, Polygon RPC, Ethereum RPC, JSON-RPC, USDC payment, web3 API">
+  <link rel="canonical" href="https://rpc.opsalis.com/">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%9A%A1</text></svg>">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://rpc.opsalis.com/">
+  <meta property="og:title" content="RPCaaS - Multi-chain RPC Endpoints">
+  <meta property="og:description" content="Multi-chain RPC endpoints. Base, Optimism, Arbitrum, Polygon, Ethereum. Free tier: 100K requests/day. Pay with USDC.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="RPCaaS - Multi-chain RPC Endpoints">
+  <meta name="twitter:description" content="Multi-chain RPC endpoints. Free tier: 100K requests/day. Pay with USDC.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { DEFAULT: '#6366f1', dark: '#4f46e5', light: '#e0e7ff', 50: '#eef2ff' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .btn-primary { background-color: #6366f1; color: #fff; }
+    .btn-primary:hover { background-color: #4f46e5; transform: translateY(-1px); }
+    .btn-primary { transition: all 0.2s ease; }
+    .btn-outline { border: 2px solid #6366f1; color: #6366f1; }
+    .btn-outline:hover { background-color: #eef2ff; }
+    .btn-outline { transition: all 0.2s ease; }
+    .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 12px; overflow-x: auto; }
+    .code-block .comment { color: #6c7086; }
+    .code-block .string { color: #a6e3a1; }
+    .code-block .keyword { color: #cba6f7; }
+    .chain-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .chain-card { transition: all 0.2s ease; }
+    .mobile-menu { display: none; }
+    .mobile-menu.open { display: flex; }
+    .tab-btn { cursor: pointer; }
+    .tab-btn.active { color: #6366f1; border-bottom: 2px solid #6366f1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "RPCaaS",
+    "description": "Multi-chain RPC endpoints for blockchain developers. Base, Optimism, Arbitrum, Polygon, Ethereum.",
+    "url": "https://rpc.opsalis.com",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "offers": [
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "100K requests/day, 3M/month" },
+      { "@type": "Offer", "name": "Growth", "price": "10", "priceCurrency": "USD", "description": "30M requests/month" },
+      { "@type": "Offer", "name": "Pro", "price": "50", "priceCurrency": "USD", "description": "300M requests/month" },
+      { "@type": "Offer", "name": "Enterprise", "price": "200", "priceCurrency": "USD", "description": "Unlimited requests" }
+    ]
+  }
+  </script>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+  <!-- Nav -->
+  <nav class="border-b border-gray-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold tracking-tight">
+        <span class="text-indigo-500">RPC</span><span class="text-gray-900">aaS</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+        <a href="#chains" class="hover:text-gray-900 transition">Chains</a>
+        <a href="#pricing" class="hover:text-gray-900 transition">Pricing</a>
+        <a href="#examples" class="hover:text-gray-900 transition">Examples</a>
+        <a href="/docs.html" class="hover:text-gray-900 transition">Docs</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#pricing" class="btn-primary text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">
+          Get API Key
+        </a>
+        <button aria-label="Toggle mobile menu" onclick="document.getElementById('mobile-nav').classList.toggle('open')" class="md:hidden p-2 text-gray-600 hover:text-gray-900">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-nav" class="mobile-menu flex-col gap-2 px-6 pb-4 md:hidden text-sm font-medium text-gray-600">
+      <a href="#chains" class="py-2 hover:text-gray-900 transition">Chains</a>
+      <a href="#pricing" class="py-2 hover:text-gray-900 transition">Pricing</a>
+      <a href="#examples" class="py-2 hover:text-gray-900 transition">Examples</a>
+      <a href="/docs.html" class="py-2 hover:text-gray-900 transition">Docs</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-indigo-50 via-white to-violet-50">
+    <div class="max-w-6xl mx-auto px-6 pt-24 pb-32 text-center">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-6 text-gray-900">
+        Multi-chain RPC endpoints<br>
+        <span class="text-indigo-500">Pay with USDC</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+        Base, Optimism, Arbitrum, Polygon, Ethereum. Standard JSON-RPC.
+        Free tier: 100K requests/day. No sign-up, no KYC.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#pricing" class="btn-primary text-base font-semibold px-8 py-3.5 rounded-xl shadow-md w-full sm:w-auto">
+          Get Your API Key
+        </a>
+        <a href="#examples" class="btn-outline text-base font-semibold px-8 py-3.5 rounded-xl w-full sm:w-auto">
+          View Examples
+        </a>
+      </div>
+      <div class="mt-10 code-block p-4 max-w-2xl mx-auto text-left text-sm">
+        <pre><span class="comment">// Connect to any chain in seconds</span>
+<span class="keyword">const</span> provider = <span class="keyword">new</span> JsonRpcProvider(
+  <span class="string">'https://rpc.opsalis.com/v1/base/YOUR_API_KEY'</span>
+);
+<span class="keyword">const</span> block = <span class="keyword">await</span> provider.getBlockNumber();</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Supported Chains -->
+  <section id="chains" class="py-24 border-t border-gray-100">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">5 chains, one endpoint</h2>
+        <p class="text-gray-600 max-w-xl mx-auto">Standard JSON-RPC. Same URL pattern for every chain. Switch chains by changing one word.</p>
+      </div>
+      <div class="grid md:grid-cols-5 gap-4">
+        <!-- Base -->
+        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
+          <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+            <span class="text-blue-600 font-bold text-lg">B</span>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Base</h3>
+          <p class="text-xs text-gray-500">Chain ID 8453</p>
+          <code class="text-xs text-indigo-600 mt-2 block">/v1/base/</code>
+        </div>
+        <!-- Optimism -->
+        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
+          <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <span class="text-red-600 font-bold text-lg">O</span>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Optimism</h3>
+          <p class="text-xs text-gray-500">Chain ID 10</p>
+          <code class="text-xs text-indigo-600 mt-2 block">/v1/optimism/</code>
+        </div>
+        <!-- Arbitrum -->
+        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
+          <div class="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-4">
+            <span class="text-sky-600 font-bold text-lg">A</span>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Arbitrum</h3>
+          <p class="text-xs text-gray-500">Chain ID 42161</p>
+          <code class="text-xs text-indigo-600 mt-2 block">/v1/arbitrum/</code>
+        </div>
+        <!-- Polygon -->
+        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
+          <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
+            <span class="text-purple-600 font-bold text-lg">P</span>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Polygon</h3>
+          <p class="text-xs text-gray-500">Chain ID 137</p>
+          <code class="text-xs text-indigo-600 mt-2 block">/v1/polygon/</code>
+        </div>
+        <!-- Ethereum -->
+        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
+          <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <span class="text-gray-600 font-bold text-lg">E</span>
+          </div>
+          <h3 class="font-semibold text-gray-900 mb-1">Ethereum</h3>
+          <p class="text-xs text-gray-500">Chain ID 1</p>
+          <code class="text-xs text-indigo-600 mt-2 block">/v1/ethereum/</code>
+        </div>
+      </div>
+      <p class="text-center text-sm text-gray-500 mt-8">
+        Also accepts aliases: <code class="text-xs bg-gray-100 px-2 py-1 rounded">op</code>,
+        <code class="text-xs bg-gray-100 px-2 py-1 rounded">arb</code>,
+        <code class="text-xs bg-gray-100 px-2 py-1 rounded">matic</code>,
+        <code class="text-xs bg-gray-100 px-2 py-1 rounded">eth</code>,
+        or chain IDs like <code class="text-xs bg-gray-100 px-2 py-1 rounded">8453</code>
+      </p>
+    </div>
+  </section>
+
+  <!-- Why Us -->
+  <section class="py-24 border-t border-gray-100 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Why switch from Alchemy?</h2>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2 text-gray-900">80% cheaper</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">30M requests/month for $10 vs $49 at Alchemy. Same standard JSON-RPC, lower price.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2 text-gray-900">No KYC, no sign-up</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">Get an API key instantly. No email, no credit card, no identity verification. Pay with USDC when you need more.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-5">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2 text-gray-900">Standard JSON-RPC</h3>
+          <p class="text-gray-600 text-sm leading-relaxed">Works with ethers.js, web3.js, viem, Hardhat, Foundry, MetaMask. Change one URL and you are done.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-24 border-t border-gray-100">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Simple pricing</h2>
+        <p class="text-gray-600 max-w-xl mx-auto">Start free. Upgrade when you need more. Pay with USDC.</p>
+      </div>
+      <div class="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+        <!-- Free -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <h3 class="text-xl font-bold text-gray-900 mb-1">Free</h3>
+          <p class="text-gray-500 text-xs mb-6">Get started</p>
+          <div class="mb-6">
+            <span class="text-4xl font-extrabold text-gray-900">$0</span>
+            <span class="text-gray-500 text-sm">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              100K requests/day
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              3M requests/month
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              10 req/sec
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              All 5 chains
+            </li>
+          </ul>
+          <a href="#" class="block text-center btn-outline text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
+            Get Free Key
+          </a>
+        </div>
+        <!-- Growth -->
+        <div class="bg-white border-2 border-indigo-500 rounded-2xl p-8 shadow-md relative">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-xs font-semibold px-3 py-1 rounded-full">Popular</div>
+          <h3 class="text-xl font-bold text-gray-900 mb-1">Growth</h3>
+          <p class="text-gray-500 text-xs mb-6">Side projects</p>
+          <div class="mb-6">
+            <span class="text-4xl font-extrabold text-gray-900">$10</span>
+            <span class="text-gray-500 text-sm">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              1M requests/day
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              30M requests/month
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              50 req/sec
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              All 5 chains
+            </li>
+          </ul>
+          <a href="#" class="block text-center btn-primary text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
+            Pay with USDC
+          </a>
+        </div>
+        <!-- Pro -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <h3 class="text-xl font-bold text-gray-900 mb-1">Pro</h3>
+          <p class="text-gray-500 text-xs mb-6">Production apps</p>
+          <div class="mb-6">
+            <span class="text-4xl font-extrabold text-gray-900">$50</span>
+            <span class="text-gray-500 text-sm">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              10M requests/day
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              300M requests/month
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              200 req/sec
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              All 5 chains
+            </li>
+          </ul>
+          <a href="#" class="block text-center btn-outline text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
+            Pay with USDC
+          </a>
+        </div>
+        <!-- Enterprise -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+          <h3 class="text-xl font-bold text-gray-900 mb-1">Enterprise</h3>
+          <p class="text-gray-500 text-xs mb-6">Unlimited scale</p>
+          <div class="mb-6">
+            <span class="text-4xl font-extrabold text-gray-900">$200</span>
+            <span class="text-gray-500 text-sm">/month</span>
+          </div>
+          <ul class="space-y-3 mb-8 text-sm text-gray-700">
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              Unlimited requests
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              1,000 req/sec
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              All 5 chains
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              Priority support
+            </li>
+          </ul>
+          <a href="#" class="block text-center btn-outline text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
+            Pay with USDC
+          </a>
+        </div>
+      </div>
+      <p class="text-center text-sm text-gray-500 mt-8">All plans include all 5 chains. Pay with USDC on Base (low fees).</p>
+    </div>
+  </section>
+
+  <!-- Code Examples -->
+  <section id="examples" class="py-24 border-t border-gray-100 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Works with your stack</h2>
+        <p class="text-gray-600">Change one URL. Everything else stays the same.</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-6 border-b border-gray-200 mb-6 text-sm font-medium text-gray-500 overflow-x-auto">
+        <button class="tab-btn active pb-3 whitespace-nowrap" onclick="switchTab('curl')">curl</button>
+        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('ethers')">ethers.js</button>
+        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('web3')">web3.js</button>
+        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('viem')">viem</button>
+        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('python')">Python</button>
+        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('hardhat')">Hardhat</button>
+        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('foundry')">Foundry</button>
+      </div>
+
+      <!-- curl -->
+      <div id="tab-curl" class="tab-content active">
+        <div class="code-block p-6 text-sm">
+          <pre><span class="comment"># Get latest block number on Base</span>
+curl https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY \
+  -X POST \
+  -H <span class="string">"Content-Type: application/json"</span> \
+  -d <span class="string">'{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'</span>
+
+<span class="comment"># Response:</span>
+<span class="comment"># {"jsonrpc":"2.0","result":"0x134a5b7","id":1}</span></pre>
+        </div>
+      </div>
+
+      <!-- ethers.js -->
+      <div id="tab-ethers" class="tab-content">
+        <div class="code-block p-6 text-sm">
+          <pre><span class="keyword">import</span> { JsonRpcProvider } <span class="keyword">from</span> <span class="string">'ethers'</span>;
+
+<span class="keyword">const</span> provider = <span class="keyword">new</span> JsonRpcProvider(
+  <span class="string">'https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY'</span>
+);
+
+<span class="keyword">const</span> blockNumber = <span class="keyword">await</span> provider.getBlockNumber();
+console.log(<span class="string">'Latest block:'</span>, blockNumber);
+
+<span class="keyword">const</span> balance = <span class="keyword">await</span> provider.getBalance(
+  <span class="string">'0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'</span>
+);
+console.log(<span class="string">'Balance:'</span>, balance.toString());</pre>
+        </div>
+      </div>
+
+      <!-- web3.js -->
+      <div id="tab-web3" class="tab-content">
+        <div class="code-block p-6 text-sm">
+          <pre><span class="keyword">import</span> { Web3 } <span class="keyword">from</span> <span class="string">'web3'</span>;
+
+<span class="keyword">const</span> web3 = <span class="keyword">new</span> Web3(
+  <span class="string">'https://rpc.opsalis.com/v1/optimism/rpk_YOUR_API_KEY'</span>
+);
+
+<span class="keyword">const</span> blockNumber = <span class="keyword">await</span> web3.eth.getBlockNumber();
+console.log(<span class="string">'Latest block:'</span>, blockNumber);</pre>
+        </div>
+      </div>
+
+      <!-- viem -->
+      <div id="tab-viem" class="tab-content">
+        <div class="code-block p-6 text-sm">
+          <pre><span class="keyword">import</span> { createPublicClient, http } <span class="keyword">from</span> <span class="string">'viem'</span>;
+<span class="keyword">import</span> { base } <span class="keyword">from</span> <span class="string">'viem/chains'</span>;
+
+<span class="keyword">const</span> client = createPublicClient({
+  chain: base,
+  transport: http(<span class="string">'https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY'</span>),
+});
+
+<span class="keyword">const</span> blockNumber = <span class="keyword">await</span> client.getBlockNumber();</pre>
+        </div>
+      </div>
+
+      <!-- Python -->
+      <div id="tab-python" class="tab-content">
+        <div class="code-block p-6 text-sm">
+          <pre><span class="keyword">from</span> web3 <span class="keyword">import</span> Web3
+
+w3 = Web3(Web3.HTTPProvider(
+    <span class="string">'https://rpc.opsalis.com/v1/polygon/rpk_YOUR_API_KEY'</span>
+))
+
+print(<span class="string">'Block:'</span>, w3.eth.block_number)
+print(<span class="string">'Balance:'</span>, w3.eth.get_balance(
+    <span class="string">'0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'</span>
+))</pre>
+        </div>
+      </div>
+
+      <!-- Hardhat -->
+      <div id="tab-hardhat" class="tab-content">
+        <div class="code-block p-6 text-sm">
+          <pre><span class="comment">// hardhat.config.js</span>
+module.exports = {
+  networks: {
+    base: {
+      url: <span class="string">'https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY'</span>,
+      chainId: 8453,
+    },
+    arbitrum: {
+      url: <span class="string">'https://rpc.opsalis.com/v1/arbitrum/rpk_YOUR_API_KEY'</span>,
+      chainId: 42161,
+    },
+  },
+};</pre>
+        </div>
+      </div>
+
+      <!-- Foundry -->
+      <div id="tab-foundry" class="tab-content">
+        <div class="code-block p-6 text-sm">
+          <pre><span class="comment"># Deploy contract to Base</span>
+forge create src/MyContract.sol:MyContract \
+  --rpc-url https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY \
+  --private-key $PRIVATE_KEY
+
+<span class="comment"># Read from Polygon</span>
+cast call 0x... <span class="string">"balanceOf(address)(uint256)"</span> 0x... \
+  --rpc-url https://rpc.opsalis.com/v1/polygon/rpk_YOUR_API_KEY</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section class="py-24 border-t border-gray-100">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Compare pricing</h2>
+        <p class="text-gray-600">30M requests/month across all providers.</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200">
+              <th class="text-left py-3 px-4 font-semibold text-gray-900">Provider</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-900">Price</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-900">Payment</th>
+              <th class="text-left py-3 px-4 font-semibold text-gray-900">KYC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-100 bg-indigo-50">
+              <td class="py-3 px-4 font-semibold text-indigo-600">RPCaaS</td>
+              <td class="py-3 px-4 font-bold text-indigo-600">$10/mo</td>
+              <td class="py-3 px-4">USDC</td>
+              <td class="py-3 px-4">None</td>
+            </tr>
+            <tr class="border-b border-gray-100">
+              <td class="py-3 px-4 text-gray-700">Alchemy</td>
+              <td class="py-3 px-4 text-gray-700">$49/mo</td>
+              <td class="py-3 px-4 text-gray-500">Credit card</td>
+              <td class="py-3 px-4 text-gray-500">Email + name</td>
+            </tr>
+            <tr class="border-b border-gray-100">
+              <td class="py-3 px-4 text-gray-700">Infura</td>
+              <td class="py-3 px-4 text-gray-700">$50/mo</td>
+              <td class="py-3 px-4 text-gray-500">Credit card</td>
+              <td class="py-3 px-4 text-gray-500">Email + name</td>
+            </tr>
+            <tr class="border-b border-gray-100">
+              <td class="py-3 px-4 text-gray-700">QuickNode</td>
+              <td class="py-3 px-4 text-gray-700">$49/mo</td>
+              <td class="py-3 px-4 text-gray-500">Credit card</td>
+              <td class="py-3 px-4 text-gray-500">Email + name</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 text-gray-700">Ankr</td>
+              <td class="py-3 px-4 text-gray-700">$49/mo</td>
+              <td class="py-3 px-4 text-gray-500">Card + crypto</td>
+              <td class="py-3 px-4 text-gray-500">Email</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-6 py-12">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="text-sm text-gray-500">
+          <span class="font-semibold text-gray-900">RPCaaS</span> &mdash; Multi-chain RPC endpoints
+        </div>
+        <div class="flex items-center gap-6 text-sm text-gray-500">
+          <a href="/docs.html" class="hover:text-gray-900 transition">Docs</a>
+          <a href="/terms.html" class="hover:text-gray-900 transition">Terms</a>
+          <a href="https://github.com/opsalis/rpcaas" class="hover:text-gray-900 transition">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function switchTab(name) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

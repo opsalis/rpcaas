@@ -1,0 +1,8 @@
+name = "rpcaas"
+compatibility_date = "2024-09-01"
+
+[site]
+bucket = "."
+
+# Custom domain configured in Cloudflare dashboard
+# rpc.opsalis.com → Cloudflare Pages

@@ -1,0 +1,55 @@
+# Polygon PoS full node configuration
+# Runs Bor (execution) + Heimdall (consensus) — two containers per pod
+
+replicaCount: 1
+
+bor:
+  image:
+    repository: 0xpolygon/bor
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "4Gi"
+    limits:
+      cpu: "2000m"
+      memory: "8Gi"
+  ports:
+    rpc: 8545
+    ws: 8546
+
+heimdall:
+  image:
+    repository: 0xpolygon/heimdall
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+    limits:
+      cpu: "1000m"
+      memory: "4Gi"
+  ports:
+    rpc: 26657
+    rest: 1317
+
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  size: 350Gi
+  mountPath: /data
+  hostPath: /mnt/chains/polygon
+
+nodeSelector:
+  role: rpc
+
+service:
+  type: ClusterIP
+  port: 8545
+
+# Polygon requires Ethereum L1 RPC for Heimdall checkpoints
+ethRpcUrl: "http://ethereum-node.rpcaas.svc.cluster.local:8545"
+chainId: 137
+network: mainnet

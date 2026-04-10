@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpcaas-proxy
+  namespace: rpcaas
+  labels:
+    app: rpcaas-proxy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rpcaas-proxy
+  template:
+    metadata:
+      labels:
+        app: rpcaas-proxy
+    spec:
+      containers:
+        - name: proxy
+          image: opsalis/rpcaas-proxy:latest
+          ports:
+            - containerPort: 3100
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3100"
+            - name: BASE_RPC_URL
+              value: "http://base-node.rpcaas.svc.cluster.local:8545"
+            - name: OPTIMISM_RPC_URL
+              value: "http://optimism-node.rpcaas.svc.cluster.local:8545"
+            - name: ARBITRUM_RPC_URL
+              value: "http://arbitrum-node.rpcaas.svc.cluster.local:8547"
+            - name: POLYGON_RPC_URL
+              value: "http://polygon-node.rpcaas.svc.cluster.local:8545"
+            - name: ETHEREUM_RPC_URL
+              value: "http://ethereum-node.rpcaas.svc.cluster.local:8545"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3100
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3100
+            initialDelaySeconds: 3
+            periodSeconds: 10
+      restartPolicy: Always

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: optimism-node
+description: Optimism (Chain ID 10) full node for RPCaaS
+type: application
+version: 1.0.0
+appVersion: "latest"

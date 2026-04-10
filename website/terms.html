@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPCaaS - Terms of Use</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body { font-family: 'Inter', system-ui, sans-serif; }</style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+  <nav class="border-b border-gray-200 bg-white sticky top-0 z-50">
+    <div class="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold tracking-tight">
+        <span class="text-indigo-500">RPC</span><span class="text-gray-900">aaS</span>
+      </a>
+      <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
+        <a href="/" class="hover:text-gray-900">Home</a>
+        <a href="/docs.html" class="hover:text-gray-900">Docs</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-3xl mx-auto px-6 py-16 prose prose-gray">
+    <h1 class="text-3xl font-bold mb-2">Terms of Use</h1>
+    <p class="text-gray-500 text-sm mb-8">Last updated: April 2026</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">1. Service Description</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">RPCaaS provides multi-chain JSON-RPC endpoint access for blockchain networks including Base, Optimism, Arbitrum, Polygon, and Ethereum. The service proxies standard JSON-RPC requests to blockchain full nodes operated by us.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">2. API Keys</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">API keys are issued for individual use. You are responsible for keeping your API key confidential. Do not share your API key or embed it in client-side code. We reserve the right to revoke API keys that violate these terms or are used in a manner that degrades service for other users.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">3. Rate Limits</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">Each tier has defined rate limits (requests per second, per day, and per month). Exceeding these limits results in HTTP 429 responses. Persistent abuse of rate limits may result in key revocation.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">4. Payment</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">Paid tiers are billed monthly in USDC. Payments are non-refundable. If payment is not received by the due date, your API key will be downgraded to the free tier. We do not store credit card information; all payments are processed via USDC transfers on-chain.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">5. Service Level</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">We provide the service on a best-effort basis. We do not guarantee 100% uptime. Blockchain nodes may fall out of sync, require maintenance, or experience temporary outages. We are not liable for any losses resulting from service unavailability.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">6. Acceptable Use</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">You may not use the service to:</p>
+    <ul class="list-disc pl-6 text-gray-700 mb-4 space-y-1">
+      <li>Conduct denial-of-service attacks against our infrastructure or any third party</li>
+      <li>Resell or redistribute API access without authorization</li>
+      <li>Attempt to circumvent rate limits or authentication</li>
+      <li>Use the service for any illegal purpose</li>
+    </ul>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">7. Data and Privacy</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">We do not collect personal information. API keys are anonymous. We log request counts for metering purposes. We do not log the content of your JSON-RPC requests. We do not sell or share any data with third parties.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">8. Limitation of Liability</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">The service is provided "as is" without warranty of any kind. In no event shall we be liable for any indirect, incidental, special, or consequential damages arising out of the use or inability to use the service. Our total liability is limited to the amount you have paid us in the preceding 12 months.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">9. Changes</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">We may modify these terms at any time. Continued use of the service after changes constitutes acceptance of the new terms. Material changes will be communicated through the website.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">10. Governing Law</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">These terms are governed by the laws of the State of Wyoming, United States.</p>
+  </div>
+
+  <footer class="border-t border-gray-200 bg-gray-50">
+    <div class="max-w-3xl mx-auto px-6 py-8 text-center text-sm text-gray-500">
+      <a href="/" class="hover:text-gray-900">Home</a> &middot;
+      <a href="/docs.html" class="hover:text-gray-900">Docs</a>
+    </div>
+  </footer>
+</body>
+</html>

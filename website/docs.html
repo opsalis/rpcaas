@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPCaaS - Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; overflow-x: auto; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+  <nav class="border-b border-gray-200 bg-white sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="text-xl font-bold tracking-tight">
+        <span class="text-indigo-500">RPC</span><span class="text-gray-900">aaS</span>
+      </a>
+      <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
+        <a href="/" class="hover:text-gray-900">Home</a>
+        <a href="/docs.html" class="text-gray-900">Docs</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-4xl mx-auto px-6 py-16">
+    <h1 class="text-4xl font-bold mb-8">Documentation</h1>
+
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-4">Endpoint Format</h2>
+      <div class="code-block p-4 text-sm mb-4">
+        <pre>POST https://rpc.opsalis.com/v1/{chain}/{apiKey}</pre>
+      </div>
+      <p class="text-gray-600 mb-4">Replace <code class="bg-gray-100 px-2 py-0.5 rounded text-sm">{chain}</code> with a chain name, alias, or chain ID. Replace <code class="bg-gray-100 px-2 py-0.5 rounded text-sm">{apiKey}</code> with your API key.</p>
+
+      <h3 class="text-lg font-semibold mb-2 mt-6">Chain Identifiers</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border border-gray-200 rounded-lg">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="text-left py-2 px-4 border-b">Chain</th>
+              <th class="text-left py-2 px-4 border-b">ID</th>
+              <th class="text-left py-2 px-4 border-b">Accepted Values</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b"><td class="py-2 px-4">Base</td><td class="py-2 px-4">8453</td><td class="py-2 px-4"><code>base</code>, <code>base-mainnet</code>, <code>8453</code></td></tr>
+            <tr class="border-b"><td class="py-2 px-4">Optimism</td><td class="py-2 px-4">10</td><td class="py-2 px-4"><code>optimism</code>, <code>op</code>, <code>op-mainnet</code>, <code>10</code></td></tr>
+            <tr class="border-b"><td class="py-2 px-4">Arbitrum</td><td class="py-2 px-4">42161</td><td class="py-2 px-4"><code>arbitrum</code>, <code>arb</code>, <code>arbitrum-one</code>, <code>42161</code></td></tr>
+            <tr class="border-b"><td class="py-2 px-4">Polygon</td><td class="py-2 px-4">137</td><td class="py-2 px-4"><code>polygon</code>, <code>matic</code>, <code>polygon-pos</code>, <code>137</code></td></tr>
+            <tr><td class="py-2 px-4">Ethereum</td><td class="py-2 px-4">1</td><td class="py-2 px-4"><code>ethereum</code>, <code>eth</code>, <code>mainnet</code>, <code>1</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-4">Rate Limits</h2>
+      <table class="w-full text-sm border border-gray-200 rounded-lg">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="text-left py-2 px-4 border-b">Tier</th>
+            <th class="text-left py-2 px-4 border-b">Daily</th>
+            <th class="text-left py-2 px-4 border-b">Monthly</th>
+            <th class="text-left py-2 px-4 border-b">Per Second</th>
+            <th class="text-left py-2 px-4 border-b">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b"><td class="py-2 px-4">Free</td><td class="py-2 px-4">100K</td><td class="py-2 px-4">3M</td><td class="py-2 px-4">10</td><td class="py-2 px-4">$0</td></tr>
+          <tr class="border-b"><td class="py-2 px-4">Growth</td><td class="py-2 px-4">1M</td><td class="py-2 px-4">30M</td><td class="py-2 px-4">50</td><td class="py-2 px-4">$10</td></tr>
+          <tr class="border-b"><td class="py-2 px-4">Pro</td><td class="py-2 px-4">10M</td><td class="py-2 px-4">300M</td><td class="py-2 px-4">200</td><td class="py-2 px-4">$50</td></tr>
+          <tr><td class="py-2 px-4">Enterprise</td><td class="py-2 px-4">Unlimited</td><td class="py-2 px-4">Unlimited</td><td class="py-2 px-4">1,000</td><td class="py-2 px-4">$200</td></tr>
+        </tbody>
+      </table>
+      <p class="text-gray-600 text-sm mt-4">Rate limit headers are included in every response: <code class="bg-gray-100 px-1 rounded">X-RateLimit-Limit</code>, <code class="bg-gray-100 px-1 rounded">X-RateLimit-Remaining</code>, <code class="bg-gray-100 px-1 rounded">X-RateLimit-Reset</code>.</p>
+    </section>
+
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-4">Error Codes</h2>
+      <table class="w-full text-sm border border-gray-200 rounded-lg">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="text-left py-2 px-4 border-b">HTTP</th>
+            <th class="text-left py-2 px-4 border-b">Code</th>
+            <th class="text-left py-2 px-4 border-b">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b"><td class="py-2 px-4">400</td><td class="py-2 px-4">-32001</td><td class="py-2 px-4">Unsupported chain</td></tr>
+          <tr class="border-b"><td class="py-2 px-4">401</td><td class="py-2 px-4">-32002</td><td class="py-2 px-4">Invalid API key</td></tr>
+          <tr class="border-b"><td class="py-2 px-4">429</td><td class="py-2 px-4">-32005</td><td class="py-2 px-4">Rate limit exceeded</td></tr>
+          <tr class="border-b"><td class="py-2 px-4">502</td><td class="py-2 px-4">-32003</td><td class="py-2 px-4">Node unavailable</td></tr>
+          <tr><td class="py-2 px-4">504</td><td class="py-2 px-4">-32004</td><td class="py-2 px-4">Node timeout</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-4">Supported Methods</h2>
+      <p class="text-gray-600 mb-4">All standard Ethereum JSON-RPC methods are supported. The most commonly used:</p>
+      <div class="grid md:grid-cols-2 gap-2 text-sm">
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_blockNumber</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getBlockByNumber</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getBlockByHash</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getTransactionByHash</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getTransactionReceipt</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_call</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_estimateGas</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_sendRawTransaction</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getBalance</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getCode</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getStorageAt</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getLogs</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_gasPrice</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_chainId</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">net_version</code>
+        <code class="bg-gray-100 px-3 py-1.5 rounded">web3_clientVersion</code>
+      </div>
+    </section>
+  </div>
+
+  <footer class="border-t border-gray-200 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-6 py-8 text-center text-sm text-gray-500">
+      <a href="/" class="hover:text-gray-900">Home</a> &middot;
+      <a href="/terms.html" class="hover:text-gray-900">Terms</a> &middot;
+      <a href="https://github.com/opsalis/rpcaas" class="hover:text-gray-900">GitHub</a>
+    </div>
+  </footer>
+</body>
+</html>
