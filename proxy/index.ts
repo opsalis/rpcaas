@@ -186,7 +186,7 @@ app.post('/v1/:chain/:apiKey', async (req: Request, res: Response) => {
   const { chain: chainParam, apiKey } = req.params;
 
   // 1. Resolve chain alias
-  const chain = resolveChain(chainParam);
+  const chain = resolveChain(chainParam as string);
   if (!chain) {
     res.status(400).json({
       jsonrpc: '2.0',
@@ -200,7 +200,7 @@ app.post('/v1/:chain/:apiKey', async (req: Request, res: Response) => {
   }
 
   // 2. Validate API key
-  const keyRecord = apiKeyStore.validate(apiKey);
+  const keyRecord = apiKeyStore.validate(apiKey as string);
   if (!keyRecord) {
     res.status(401).json({
       jsonrpc: '2.0',
@@ -214,7 +214,7 @@ app.post('/v1/:chain/:apiKey', async (req: Request, res: Response) => {
   }
 
   // 3. Check rate limits and meter
-  const meterResult = metering.check(apiKey, keyRecord.tier);
+  const meterResult = metering.check(apiKey as string, keyRecord.tier);
 
   // Set rate limit headers regardless of result
   res.setHeader('X-RateLimit-Limit', meterResult.dailyLimit === Infinity ? 'unlimited' : meterResult.dailyLimit.toString());
@@ -281,7 +281,7 @@ app.post('/v1/:chain/:apiKey', async (req: Request, res: Response) => {
       signal: AbortSignal.timeout(30_000), // 30s timeout
     });
 
-    const data = await response.json();
+    const data: any = await response.json();
     const latency = Date.now() - startTime;
 
     // Cache the response if cacheable and successful (no error in response)
