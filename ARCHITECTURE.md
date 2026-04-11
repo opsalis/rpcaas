@@ -256,12 +256,96 @@ Total time to full sync: approximately 3-4 weeks sequential.
   - API key usage (top consumers)
 - Alerts: node out of sync, disk > 85%, error rate > 5%
 
+## CDN Architecture: Distributed RPC Caching
+
+Only node-uk1 (London) runs the actual full blockchain nodes. All other k3s nodes run lightweight RPC proxies with caching. Customer always hits the nearest node.
+
+```
+Customer → nearest k3s node (RPC proxy + cache)
+              ↓ cache hit → instant response (5-20ms)
+              ↓ cache miss → forward to node-uk1 (100-200ms)
+                                ↓
+                          Full nodes on /dev/sdb (4TB)
+                          Base + Optimism + Arbitrum + Polygon + Ethereum
+```
+
+### Components
+
+**On node-uk1 only (London, 4TB):**
+- 5 full blockchain nodes (Base, Optimism, Arbitrum, Polygon, Ethereum L1)
+- Chain sync scripts that keep them updated
+- Internal RPC endpoint (not exposed to customers directly)
+- MinIO for any archive data
+
+**On EVERY k3s node (Canada, Singapore, Frankfurt, UK):**
+- RPC proxy pod: receives customer requests, routes to cache or UK
+- Redis/in-memory cache: stores hot data locally
+- ~100MB RAM footprint per node
+
+### Cache Strategy
+
+| Method | TTL | Rationale |
+|--------|-----|-----------|
+| `eth_blockNumber` | 2s | Changes every block |
+| `eth_gasPrice` | 5s | Changes frequently |
+| `eth_getCode(addr)` | forever | Immutable once deployed |
+| `eth_getBalance(addr, 'latest')` | 10s | Changes on transfers |
+| `eth_getStorageAt(addr, slot, 'latest')` | 10s | Changes on state writes |
+| `eth_call(data, 'latest')` | 5s | View function results |
+| `eth_getTransactionReceipt(hash)` | forever | Immutable once confirmed |
+| `eth_getLogs(filter)` | 30s | If filter includes latest |
+| `eth_sendRawTransaction` | NEVER | Write operation, always forward |
+| Historical queries (specific block number) | forever | Immutable by definition |
+| `eth_chainId` | forever | Immutable |
+| `net_version` | forever | Immutable |
+
+### k3s Pod Structure (CDN Model)
+
+```yaml
+# RPC proxy pod (on every node)
+apiVersion: apps/v1
+kind: DaemonSet    # runs on ALL k3s nodes
+metadata:
+  name: rpc-proxy
+spec:
+  template:
+    containers:
+    - name: proxy
+      image: rpcaas/proxy:latest
+      ports:
+      - containerPort: 3100
+      env:
+      - name: UPSTREAM_URL
+        value: "http://rpc-fullnodes.rpc-system:8545"
+      resources:
+        requests:
+          cpu: "50m"
+          memory: "128Mi"
+
+# Full nodes (ONLY on node-uk1)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: base-fullnode
+spec:
+  nodeSelector:
+    role: rpc
+  # ... one per chain
+```
+
+### Cache Implementation
+
+The proxy uses an in-memory TTL cache (Map-based). Cache key is constructed from chain + method + params hash. Write operations (`eth_sendRawTransaction`) bypass the cache entirely and are always forwarded to the UK full node.
+
+See `proxy/index.ts` for the implementation.
+
 ## Future Enhancements
 
 1. **WebSocket support** — Subscribe to new blocks, pending transactions
 2. **Archive nodes** — Historical state queries (eth_getBalance at block N)
-3. **Geographic distribution** — US-East and Asia-Pacific PoPs
+3. **Geographic distribution** — US-East and Asia-Pacific PoPs (CDN model above enables this)
 4. **Batch RPC** — Multiple JSON-RPC calls in one HTTP request (already supported by standard)
 5. **Enhanced analytics** — Per-method breakdown, latency percentiles
 6. **SDK** — npm package wrapping ethers.js with our endpoint defaults
 7. **Webhook subscriptions** — Push notifications for on-chain events
+8. **Redis cache** — Replace in-memory cache with Redis for shared state across proxy pods

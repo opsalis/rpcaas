@@ -1,16 +1,91 @@
 /**
- * RPCaaS Proxy — Multi-chain RPC endpoint proxy.
+ * RPCaaS Proxy — Multi-chain RPC endpoint proxy with CDN-style caching.
  *
  * Routes: POST /v1/:chain/:apiKey
  * Authenticates the API key, checks rate limits, meters usage,
- * forwards JSON-RPC to the appropriate chain full node.
+ * checks in-memory cache, forwards JSON-RPC to the appropriate chain full node.
+ *
+ * CDN Architecture: This proxy runs on EVERY k3s node as a DaemonSet.
+ * Only node-uk1 runs full nodes. Cache hits return in 5-20ms,
+ * cache misses forward to UK (100-200ms).
  */
 
 import express, { Request, Response, NextFunction } from 'express';
+import { createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { resolveChain, getEndpoint, getChainConfig, listChains, CHAINS } from './chains';
 import { apiKeyStore, TIERS } from './auth';
 import { metering } from './metering';
+
+// ---------------------------------------------------------------------------
+// In-memory TTL cache
+// ---------------------------------------------------------------------------
+
+const cache = new Map<string, { data: any; expires: number }>();
+
+function getCached(key: string): any | null {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expires) { cache.delete(key); return null; }
+  return entry.data;
+}
+
+function setCache(key: string, data: any, ttlMs: number): void {
+  if (ttlMs <= 0) return;
+  cache.set(key, { data, expires: Date.now() + ttlMs });
+}
+
+// Periodic cache cleanup (every 60s, remove expired entries)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of cache) {
+    if (now > entry.expires) cache.delete(key);
+  }
+}, 60_000);
+
+// TTL per RPC method (milliseconds)
+const METHOD_TTL: Record<string, number> = {
+  'eth_blockNumber': 2000,
+  'eth_gasPrice': 5000,
+  'eth_getCode': 86400000,         // 24h (immutable)
+  'eth_getBalance': 10000,
+  'eth_getStorageAt': 10000,
+  'eth_call': 5000,
+  'eth_getTransactionReceipt': 86400000, // 24h (immutable)
+  'eth_getLogs': 30000,
+  'eth_chainId': 86400000,         // 24h (immutable)
+  'net_version': 86400000,         // 24h (immutable)
+};
+
+// Never cache these (write operations)
+const NO_CACHE = new Set(['eth_sendRawTransaction', 'eth_sendTransaction']);
+
+/**
+ * Build a cache key from chain, method, and params.
+ */
+function buildCacheKey(chain: string, method: string, params: any[]): string {
+  const paramsHash = createHash('sha256').update(JSON.stringify(params || [])).digest('hex').slice(0, 16);
+  return `${chain}:${method}:${paramsHash}`;
+}
+
+/**
+ * Determine TTL for a given method and params.
+ * Historical queries (specific block number, not 'latest') are cached forever.
+ */
+function getTTL(method: string, params: any[]): number {
+  if (NO_CACHE.has(method)) return 0;
+
+  // Historical queries with specific block numbers are immutable
+  if (params && params.length > 0) {
+    const lastParam = params[params.length - 1];
+    if (typeof lastParam === 'string' && lastParam.startsWith('0x') && lastParam !== 'latest' && lastParam !== 'pending' && lastParam !== 'earliest') {
+      // Specific block number — immutable
+      return 86400000;
+    }
+  }
+
+  return METHOD_TTL[method] || 5000; // Default 5s TTL for unknown methods
+}
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3100', 10);
@@ -39,9 +114,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 /**
- * Health check endpoint.
+ * Health check endpoint. Verifies UK connectivity and reports cache stats.
  */
-app.get('/health', (_req: Request, res: Response) => {
+app.get('/health', async (_req: Request, res: Response) => {
   const chains = listChains().map(name => {
     const config = getChainConfig(name);
     return {
@@ -50,10 +125,40 @@ app.get('/health', (_req: Request, res: Response) => {
       endpoint: config?.endpoints[0] ? 'configured' : 'missing',
     };
   });
+
+  // Verify UK full node connectivity
+  let ukConnectivity = 'unknown';
+  const upstreamUrl = process.env.UPSTREAM_URL;
+  if (upstreamUrl) {
+    try {
+      const checkStart = Date.now();
+      const resp = await fetch(upstreamUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'net_version', params: [], id: 1 }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (resp.ok) {
+        ukConnectivity = `ok (${Date.now() - checkStart}ms)`;
+      } else {
+        ukConnectivity = `error (HTTP ${resp.status})`;
+      }
+    } catch (err: any) {
+      ukConnectivity = `unreachable (${err.message})`;
+    }
+  } else {
+    ukConnectivity = 'no UPSTREAM_URL configured';
+  }
+
   res.json({
-    status: 'ok',
-    version: '1.0.0',
+    status: ukConnectivity.startsWith('ok') || !upstreamUrl ? 'ok' : 'degraded',
+    version: '1.1.0',
     chains,
+    cache: {
+      entries: cache.size,
+      maxEntries: '~unlimited (in-memory)',
+    },
+    ukConnectivity,
     apiKeys: apiKeyStore.size,
     timestamp: new Date().toISOString(),
   });
@@ -147,7 +252,25 @@ app.post('/v1/:chain/:apiKey', async (req: Request, res: Response) => {
     return;
   }
 
-  // 5. Forward JSON-RPC request to chain node
+  // 5. Check cache before forwarding to upstream
+  const method = req.body?.method || '';
+  const params = req.body?.params || [];
+  const ttl = getTTL(method, params);
+  const cacheKey = buildCacheKey(chain, method, params);
+
+  // Check cache (skip for write operations)
+  if (ttl > 0) {
+    const cached = getCached(cacheKey);
+    if (cached) {
+      res.setHeader('X-Cache', 'HIT');
+      res.setHeader('X-Chain', chain);
+      res.setHeader('X-Upstream-Latency', '0ms');
+      res.status(200).json({ ...cached, id: req.body?.id || null });
+      return;
+    }
+  }
+
+  // 6. Forward JSON-RPC request to chain node (cache miss or write op)
   try {
     const startTime = Date.now();
 
@@ -161,7 +284,13 @@ app.post('/v1/:chain/:apiKey', async (req: Request, res: Response) => {
     const data = await response.json();
     const latency = Date.now() - startTime;
 
-    // Add latency header for debugging
+    // Cache the response if cacheable and successful (no error in response)
+    if (ttl > 0 && !data.error) {
+      setCache(cacheKey, data, ttl);
+    }
+
+    // Add latency/cache headers for debugging
+    res.setHeader('X-Cache', 'MISS');
     res.setHeader('X-Upstream-Latency', `${latency}ms`);
     res.setHeader('X-Chain', chain);
 
