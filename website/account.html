@@ -125,21 +125,29 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Usage today</div>
-        <div style="display:flex; justify-content:space-between; align-items:baseline;">
-          <span style="font-size:1.25rem; font-weight:700;" id="usage-count">0</span>
-          <span style="font-size:0.85rem; color:var(--text-secondary);" id="usage-limit">/ 25,000</span>
+        <div class="card-title">Usage</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="usage-today">0</div>
+            <div class="stat-label">Today</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="usage-today-limit">/ 25,000</div>
+            <div class="stat-label">Daily limit</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="usage-month">0</div>
+            <div class="stat-label">This month</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="overflow-cost">$0.00</div>
+            <div class="stat-label">Overflow cost</div>
+          </div>
         </div>
         <div class="progress-bar">
           <div class="progress-fill" id="usage-bar" style="width:0%"></div>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">
-          <span>Included requests</span>
-          <span id="usage-pct">0%</span>
-        </div>
-        <div style="margin-top:16px; font-size:0.85rem; color:var(--text-secondary);">
-          Overflow this month: <strong id="overflow-count">0</strong> requests (<strong id="overflow-cost">$0.00</strong>)
-        </div>
+        <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Daily usage</div>
       </div>
 
       <div class="card">
@@ -186,9 +194,10 @@
       document.getElementById('tier').textContent = 'Free';
       document.getElementById('status').textContent = 'Active';
       document.getElementById('rate-limit').textContent = '3/s';
-      document.getElementById('usage-count').textContent = '4,218';
-      document.getElementById('usage-limit').textContent = '/ 25,000';
-      document.getElementById('usage-pct').textContent = '17%';
+      document.getElementById('usage-today').textContent = '4,218';
+      document.getElementById('usage-today-limit').textContent = '/ 25,000';
+      document.getElementById('usage-month').textContent = '38,740';
+      document.getElementById('overflow-cost').textContent = '$0.00';
       document.getElementById('usage-bar').style.width = '17%';
     }
 
