@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Integration tests for ChainRPCBilling on Base Sepolia.
+# Integration tests for ChainRPCBilling on Demo L2 (845302).
+# Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
 # Tests: 3 keys (free, Growth, Pro), subscribe, pull, overflow charge.
 # Run AFTER deploy-and-verify.sh, pass contract address as $1.
 #
@@ -13,9 +14,9 @@ if [ -z "$CONTRACT_ADDR" ]; then
 fi
 
 DEPLOYER_KEY="0x2ff4dfaff9b15374550dada4b630441246b0598de18a8b771ef8e8ad3054a5f4"
-RPC_URL="https://base-sepolia.chainrpc.net"
-CHAIN_ID=84532
-MOCK_USDC="0xb081d16D40e4e4c27D6d8564d145Ab2933037111"
+RPC_URL="https://demo.chainrpc.net"
+CHAIN_ID=845302
+MOCK_USDC="0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81"
 DEPLOYER_ADDR="0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf"
 
 PASS=0
@@ -37,7 +38,7 @@ check() {
 }
 
 echo "╔══════════════════════════════════════════════════════╗"
-echo "║  ChainRPCBilling — Integration Tests (Base Sepolia)  ║"
+echo "║  ChainRPCBilling — Integration Tests (Demo L2 845302)║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo "Contract: $CONTRACT_ADDR"
 echo ""

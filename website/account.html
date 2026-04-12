@@ -150,7 +150,7 @@
       <div style="margin-bottom:16px;">
         <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:8px;">Payment token</label>
         <select id="token-select" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.9rem;outline:none;">
-          <option value="usdc">USDC (Base Sepolia test)</option>
+          <option value="usdc">USDC (Demo L2 test)</option>
           <option value="real-usdc">USDC (Base Mainnet — not yet available)</option>
         </select>
       </div>
@@ -294,14 +294,13 @@
 
   <script>
   // ── Config ──────────────────────────────────────────────────────────
+  // Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
   var WORKER_URL     = 'https://api.chainrpc.net';
-  var CHAIN_ID       = 84532; // Base Sepolia
-  var CHAIN_NAME     = 'Base Sepolia';
+  var CHAIN_ID       = 845302; // Sertone Demo L2
+  var CHAIN_NAME     = 'Sertone Demo L2';
   // Updated after deployment — replaced by deploy script
-  var BILLING_CONTRACT = '0xB22552D5C0F18c66d151e5417287E4A5cfcb147A';
-  var MOCK_USDC        = '0xb081d16D40e4e4c27D6d8564d145Ab2933037111';
-  // Known Base Sepolia USDC (Circle)
-  var USDC_SEPOLIA     = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
+  var BILLING_CONTRACT = 'TODO_REDEPLOY_TO_DEMO_L2';
+  var MOCK_USDC        = '0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81';
 
   var selectedTier  = 1; // 1=Growth, 2=Pro
   var currentKey    = '';
@@ -502,7 +501,7 @@
     signer = await provider.getSigner();
     walletAddress = await signer.getAddress();
 
-    // Check/switch to Base Sepolia
+    // Check/switch to Demo L2 (845302)
     var network = await provider.getNetwork();
     if (Number(network.chainId) !== CHAIN_ID) {
       try {
@@ -513,14 +512,15 @@
       } catch (switchErr) {
         // Chain not added — add it
         if (switchErr.code === 4902) {
+          // Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [{
               chainId: '0x' + CHAIN_ID.toString(16),
-              chainName: 'Base Sepolia',
+              chainName: 'Sertone Demo L2',
               nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-              rpcUrls: ['https://base-sepolia.chainrpc.net'],
-              blockExplorerUrls: ['https://sepolia.basescan.org'],
+              rpcUrls: ['https://demo.chainrpc.net'],
+              blockExplorerUrls: ['https://explorer.demo.chainrpc.net'],
             }],
           });
         } else {
@@ -555,7 +555,7 @@
       await connectWallet();
       setAlert('Wallet connected: ' + walletAddress.slice(0,6) + '...' + walletAddress.slice(-4), 'success');
 
-      var tokenAddr = MOCK_USDC; // Base Sepolia test USDC
+      var tokenAddr = MOCK_USDC; // Demo L2 test USDC
       var tierAmount = selectedTier === 1 ? 29000000n : 99000000n;
       // Approve 12x the monthly amount as initial allowance (1 year buffer)
       var approveAmount = tierAmount * 120n;

@@ -12,7 +12,7 @@ pragma solidity ^0.8.20;
  *      Tier 1 = Growth ($29/month = 29_000000)
  *      Tier 2 = Pro    ($99/month = 99_000000)
  *
- * Deployed to Base Sepolia (chainId 84532).
+ * Testing on Demo L2 (chainId 845302). For mainnet: switch to Base (chainId 8453).
  */
 interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);

@@ -1,0 +1,22 @@
+{
+  "_comment": "Testing on Demo L2 (845302). For mainnet: switch to Base (8453).",
+  "_note": "All new ChainRPC-ecosystem projects (ChainRPCBilling, future modules) MUST reference this file for test addresses.",
+  "testnet": {
+    "chainId": 845302,
+    "chainName": "Sertone Demo L2",
+    "rpcUrl": "https://demo.chainrpc.net",
+    "explorerUrl": "https://explorer.demo.chainrpc.net",
+    "mockUsdc": "0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81",
+    "deployer": "0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf",
+    "billingContract": "TODO_REDEPLOY_TO_DEMO_L2",
+    "nativeCurrency": { "name": "Ether", "symbol": "ETH", "decimals": 18 }
+  },
+  "mainnet": {
+    "chainId": 8453,
+    "chainName": "Base",
+    "rpcUrl": "https://base.chainrpc.net",
+    "explorerUrl": "https://basescan.org",
+    "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "nativeCurrency": { "name": "Ether", "symbol": "ETH", "decimals": 18 }
+  }
+}

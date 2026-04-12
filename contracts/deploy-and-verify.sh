@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-# Full deploy + verify script for ChainRPCBilling on Base Sepolia.
+# Full deploy + verify script for ChainRPCBilling on Demo L2 (845302).
+# Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
 # Run on CX43 (162.55.167.150) which has Foundry installed.
 # Usage: bash deploy-and-verify.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEPLOYER_KEY="0x2ff4dfaff9b15374550dada4b630441246b0598de18a8b771ef8e8ad3054a5f4"
-RPC_URL="https://base-sepolia.chainrpc.net"
-CHAIN_ID=84532
+RPC_URL="https://demo.chainrpc.net"
+CHAIN_ID=845302
 TREASURY="0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf"
 OPERATOR="0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf"
-MOCK_USDC="0xb081d16D40e4e4c27D6d8564d145Ab2933037111"
+MOCK_USDC="0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81"
 
 echo "╔══════════════════════════════════════════════════════╗"
-echo "║  ChainRPCBilling — Deploy to Base Sepolia            ║"
+echo "║  ChainRPCBilling — Deploy to Demo L2 (845302)        ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
 echo "RPC:       $RPC_URL"
@@ -48,7 +49,7 @@ if [ -z "$CONTRACT_ADDR" ]; then
 fi
 
 echo ""
-echo "Contract deployed: $CONTRACT_ADDR"
+echo "Contract deployed: $CONTRACT_ADDR (Demo L2 845302)"
 echo ""
 
 # ── Step 3: Smoke test — read view functions ──────────────────────────
@@ -119,8 +120,8 @@ echo "║  DEPLOYMENT COMPLETE                                 ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""
 echo "Contract:  $CONTRACT_ADDR"
-echo "Chain:     Base Sepolia ($CHAIN_ID)"
-echo "Explorer:  https://sepolia.basescan.org/address/$CONTRACT_ADDR"
+echo "Chain:     Demo L2 ($CHAIN_ID)"
+echo "Explorer:  https://explorer.demo.chainrpc.net/address/$CONTRACT_ADDR"
 echo ""
 echo "Next steps:"
 echo "  1. Update worker/wrangler.toml: BILLING_CONTRACT = \"$CONTRACT_ADDR\""

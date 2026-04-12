@@ -3,7 +3,7 @@
  *
  * Routes:
  *   POST /api/generate-key          — generate rpk_xxx, register on-chain, return key
- *   GET  /api/account/:keyHash      — subscription status from Base Sepolia
+ *   GET  /api/account/:keyHash      — subscription status from Demo L2 (845302)
  *   GET  /api/receipt/:keyHash/:tx  — receipt JSON for a pull/overflow tx
  *   POST /api/pull/:keyHash         — operator-only: pull monthly subscription
  *   POST /api/pull-overflow/:keyHash— operator-only: charge overflow
@@ -17,12 +17,13 @@
  * so we pass it as 0x-prefixed 32-byte hex.
  */
 
+// Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
 export interface Env {
-  BILLING_CONTRACT: string;       // ChainRPCBilling address on Base Sepolia
-  MOCK_USDC: string;              // MockUSDC address on Base Sepolia
+  BILLING_CONTRACT: string;       // ChainRPCBilling address on Demo L2 (845302)
+  MOCK_USDC: string;              // MockUSDC address on Demo L2
   DEPLOYER_KEY: string;           // Operator private key (hex, no 0x prefix needed)
   TREASURY: string;               // Treasury wallet address
-  BASE_SEPOLIA_RPC: string;       // https://base-sepolia.chainrpc.net
+  BILLING_RPC: string;            // https://demo.chainrpc.net  (Demo L2 845302; mainnet: https://base.chainrpc.net)
   OPERATOR_SECRET: string;        // Secret header for operator endpoints
 }
 
@@ -159,7 +160,8 @@ async function signAndSend(env: Env, to: string, data: string): Promise<string> 
       'Content-Type': 'application/json',
       'X-Operator-Secret': env.OPERATOR_SECRET,
     },
-    body: JSON.stringify({ to, data, chainId: 84532 }),
+    // Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
+    body: JSON.stringify({ to, data, chainId: 845302 }),
   });
   if (!res.ok) {
     const txt = await res.text();
@@ -290,9 +292,10 @@ async function handleGetAccount(request: Request, env: Env, keyHash: string): Pr
       return errorResponse('Key hash must be 32 bytes (64 hex chars)');
     }
 
-    // Use public Base Sepolia RPC as fallback if our own RPC is unreachable
-    const rpcPrimary = env.BASE_SEPOLIA_RPC || 'https://base-sepolia.chainrpc.net';
-    const rpcFallback = 'https://sepolia.base.org';
+    // Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
+    // No public fallback for Demo L2 — primary only.
+    const rpcPrimary = env.BILLING_RPC || 'https://demo.chainrpc.net';
+    const rpcFallback = rpcPrimary; // same — no external fallback for private chain
     const contract = env.BILLING_CONTRACT;
 
     // Helper: try primary RPC, fall back to public if it fails
@@ -373,7 +376,8 @@ async function handleGetAccount(request: Request, env: Env, keyHash: string): Pr
 
 async function handleGetReceipt(request: Request, env: Env, keyHash: string, txHash: string): Promise<Response> {
   try {
-    const rpc = env.BASE_SEPOLIA_RPC || 'https://base-sepolia.chainrpc.net';
+    // Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
+    const rpc = env.BILLING_RPC || 'https://demo.chainrpc.net';
 
     // Fetch transaction receipt
     const receipt = await rpcCall(rpc, 'eth_getTransactionReceipt', [txHash]) as {
@@ -421,7 +425,8 @@ async function handleGetReceipt(request: Request, env: Env, keyHash: string, txH
         amount,
         token,
         timestamp,
-        explorerUrl: `https://sepolia.basescan.org/tx/${txHash}`,
+        // Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
+        explorerUrl: `https://explorer.demo.chainrpc.net/tx/${txHash}`,
       }
     });
   } catch (e) {
@@ -489,8 +494,9 @@ function formatUsdc(raw: bigint): string {
 
 function getTokenSymbol(address: string, env: Env): string {
   if (address.toLowerCase() === env.MOCK_USDC?.toLowerCase()) return 'USDC (test)';
-  // Known Base Sepolia USDC: 0x036CbD53842c5426634e7929541eC2318f3dCF7e
-  if (address.toLowerCase() === '0x036cbd53842c5426634e7929541ec2318f3dcf7e') return 'USDC';
+  // Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
+  // Known Demo L2 MockUSDC: 0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81
+  if (address.toLowerCase() === '0x75e9b48f4a8f8e10f6d46a7d582ac2bec85b7d81') return 'USDC (demo)';
   return 'Unknown';
 }
 

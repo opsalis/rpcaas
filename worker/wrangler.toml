@@ -7,10 +7,11 @@ account_id = "a36738aa5ac5c9338878e4eb8d79eaa2"
 
 workers_dev = true
 
+# Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
 [vars]
-BASE_SEPOLIA_RPC = "https://base-sepolia.chainrpc.net"
-BILLING_CONTRACT = "0xB22552D5C0F18c66d151e5417287E4A5cfcb147A"
-MOCK_USDC        = "0xb081d16D40e4e4c27D6d8564d145Ab2933037111"
+BILLING_RPC      = "https://demo.chainrpc.net"
+BILLING_CONTRACT = "TODO_REDEPLOY_TO_DEMO_L2"
+MOCK_USDC        = "0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81"
 TREASURY         = "0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf"
 
 # Secrets (set via: wrangler secret put DEPLOYER_KEY)

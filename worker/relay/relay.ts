@@ -16,11 +16,12 @@
 import * as http from 'http';
 import { createHash, randomBytes } from 'crypto';
 
+// Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
 const PRIVATE_KEY    = process.env.OPERATOR_KEY     || '';
 const OPERATOR_SECRET = process.env.OPERATOR_SECRET || '';
-const RPC_URL        = process.env.RPC_URL          || 'https://base-sepolia.chainrpc.net';
+const RPC_URL        = process.env.RPC_URL          || 'https://demo.chainrpc.net';
 const PORT           = parseInt(process.env.PORT    || '3099', 10);
-const CHAIN_ID       = parseInt(process.env.CHAIN_ID || '84532', 10);
+const CHAIN_ID       = parseInt(process.env.CHAIN_ID || '845302', 10);
 
 if (!PRIVATE_KEY) {
   console.error('ERROR: OPERATOR_KEY not set');
