@@ -1,25 +1,29 @@
 /**
- * RPCaaS Proxy — Multi-chain RPC endpoint proxy with CDN-style caching.
+ * ChainRPC Proxy — Multi-chain RPC with hostname-based routing + CDN caching.
  *
- * Routes: POST /v1/:chain/:apiKey
- * Authenticates the API key, checks rate limits, meters usage,
- * checks in-memory cache, forwards JSON-RPC to the appropriate chain full node.
+ * Each blockchain gets its own FQDN:
+ *   POST https://ethereum.chainrpc.net/          (free tier, rate-limited)
+ *   POST https://ethereum.chainrpc.net/KEY       (authenticated, higher limits)
+ *   POST https://base.chainrpc.net/
+ *   POST https://l1.chainrpc.net/                (Sertone L1)
+ *   POST https://demo.chainrpc.net/              (Sertone Demo L2)
  *
- * CDN Architecture: This proxy runs on EVERY k3s node as a DaemonSet.
- * Only node-uk1 runs full nodes. Cache hits return in 5-20ms,
- * cache misses forward to UK (100-200ms).
+ * Chain is resolved from req.hostname (subdomain → chain config).
+ * Standard JSON-RPC: POST to root URL, no special headers needed.
+ * Compatible with ethers.js, web3.js, viem, MetaMask, every RPC client.
+ *
+ * CDN Architecture: DaemonSet on every k3s node. Cache hits return in <5ms.
+ * Cache misses forward to upstream RPCs with round-robin failover.
  */
 
 import express, { Request, Response, NextFunction } from 'express';
 import { createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-import { resolveChain, getEndpoint, getChainConfig, listChains, CHAINS } from './chains';
+import { resolveFromHostname, resolveChain, getEndpoint, getChainConfig, listChains, listPublicChainInfo, CHAINS } from './chains';
 import { apiKeyStore, TIERS } from './auth';
 import { metering } from './metering';
 
-// ---------------------------------------------------------------------------
-// In-memory TTL cache
-// ---------------------------------------------------------------------------
+// ── In-memory TTL cache ─────────────────────────────────────────────
 
 const cache = new Map<string, { data: any; expires: number }>();
 
@@ -35,7 +39,6 @@ function setCache(key: string, data: any, ttlMs: number): void {
   cache.set(key, { data, expires: Date.now() + ttlMs });
 }
 
-// Periodic cache cleanup (every 60s, remove expired entries)
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of cache) {
@@ -43,301 +46,321 @@ setInterval(() => {
   }
 }, 60_000);
 
-// TTL per RPC method (milliseconds)
 const METHOD_TTL: Record<string, number> = {
   'eth_blockNumber': 2000,
   'eth_gasPrice': 5000,
-  'eth_getCode': 86400000,         // 24h (immutable)
+  'eth_getCode': 86400000,
   'eth_getBalance': 10000,
   'eth_getStorageAt': 10000,
   'eth_call': 5000,
-  'eth_getTransactionReceipt': 86400000, // 24h (immutable)
+  'eth_getTransactionReceipt': 86400000,
   'eth_getLogs': 30000,
-  'eth_chainId': 86400000,         // 24h (immutable)
-  'net_version': 86400000,         // 24h (immutable)
+  'eth_chainId': 86400000,
+  'net_version': 86400000,
 };
 
-// Never cache these (write operations)
 const NO_CACHE = new Set(['eth_sendRawTransaction', 'eth_sendTransaction']);
 
-/**
- * Build a cache key from chain, method, and params.
- */
 function buildCacheKey(chain: string, method: string, params: any[]): string {
   const paramsHash = createHash('sha256').update(JSON.stringify(params || [])).digest('hex').slice(0, 16);
   return `${chain}:${method}:${paramsHash}`;
 }
 
-/**
- * Determine TTL for a given method and params.
- * Historical queries (specific block number, not 'latest') are cached forever.
- */
 function getTTL(method: string, params: any[]): number {
   if (NO_CACHE.has(method)) return 0;
-
-  // Historical queries with specific block numbers are immutable
   if (params && params.length > 0) {
     const lastParam = params[params.length - 1];
     if (typeof lastParam === 'string' && lastParam.startsWith('0x') && lastParam !== 'latest' && lastParam !== 'pending' && lastParam !== 'earliest') {
-      // Specific block number — immutable
       return 86400000;
     }
   }
-
-  return METHOD_TTL[method] || 5000; // Default 5s TTL for unknown methods
+  return METHOD_TTL[method] || 5000;
 }
+
+// ── Express app ─────────────────────────────────────────────────────
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3100', 10);
 
-// Parse JSON bodies up to 1MB (JSON-RPC requests are typically small)
 app.use(express.json({ limit: '1mb' }));
 
-// Request ID middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const requestId = uuidv4();
-  res.setHeader('X-Request-Id', requestId);
-  (req as any).requestId = requestId;
+  res.setHeader('X-Request-Id', uuidv4());
   next();
 });
 
-// CORS headers (allow all origins for RPC)
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
-  }
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   next();
 });
 
-/**
- * Health check endpoint. Verifies UK connectivity and reports cache stats.
- */
+// ── Metrics counters ────────────────────────────────────────────────
+
+const metrics = {
+  requestsTotal: new Map<string, number>(),
+  cacheHits: new Map<string, number>(),
+  cacheMisses: new Map<string, number>(),
+  errorsTotal: new Map<string, number>(),
+  latencySum: new Map<string, number>(),
+  latencyCount: new Map<string, number>(),
+  rateLimited: 0,
+  upSince: Date.now(),
+};
+
+function incMetric(map: Map<string, number>, key: string, amount = 1) {
+  map.set(key, (map.get(key) || 0) + amount);
+}
+
+// ── Health check ────────────────────────────────────────────────────
+
 app.get('/health', async (_req: Request, res: Response) => {
-  const chains = listChains().map(name => {
-    const config = getChainConfig(name);
-    return {
-      name: config?.name,
-      chainId: config?.chainId,
-      endpoint: config?.endpoints[0] ? 'configured' : 'missing',
-    };
-  });
-
-  // Verify UK full node connectivity
-  let ukConnectivity = 'unknown';
-  const upstreamUrl = process.env.UPSTREAM_URL;
-  if (upstreamUrl) {
-    try {
-      const checkStart = Date.now();
-      const resp = await fetch(upstreamUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jsonrpc: '2.0', method: 'net_version', params: [], id: 1 }),
-        signal: AbortSignal.timeout(5000),
-      });
-      if (resp.ok) {
-        ukConnectivity = `ok (${Date.now() - checkStart}ms)`;
-      } else {
-        ukConnectivity = `error (HTTP ${resp.status})`;
-      }
-    } catch (err: any) {
-      ukConnectivity = `unreachable (${err.message})`;
-    }
-  } else {
-    ukConnectivity = 'no UPSTREAM_URL configured';
-  }
-
   res.json({
-    status: ukConnectivity.startsWith('ok') || !upstreamUrl ? 'ok' : 'degraded',
-    version: '1.1.0',
-    chains,
-    cache: {
-      entries: cache.size,
-      maxEntries: '~unlimited (in-memory)',
-    },
-    ukConnectivity,
+    status: 'ok',
+    version: '2.0.0',
+    routing: 'hostname-based ({chain}.chainrpc.net)',
+    chains: listPublicChainInfo(),
+    cache: { entries: cache.size },
     apiKeys: apiKeyStore.size,
     timestamp: new Date().toISOString(),
   });
 });
 
-/**
- * List supported chains.
- */
-app.get('/v1/chains', (_req: Request, res: Response) => {
-  const chains = Object.entries(CHAINS).map(([key, config]) => ({
-    id: key,
-    name: config.name,
-    chainId: config.chainId,
-    aliases: config.aliases,
-    wsSupported: config.wsSupported,
-  }));
-  res.json({ chains });
+// ── Prometheus metrics ──────────────────────────────────────────────
+
+app.get('/metrics', (_req: Request, res: Response) => {
+  const lines: string[] = [];
+  const uptimeSec = Math.floor((Date.now() - metrics.upSince) / 1000);
+
+  lines.push('# HELP chainrpc_up Whether the service is up (1=up)');
+  lines.push('# TYPE chainrpc_up gauge');
+  lines.push(`chainrpc_up 1`);
+
+  lines.push('# HELP chainrpc_uptime_seconds Seconds since process start');
+  lines.push('# TYPE chainrpc_uptime_seconds gauge');
+  lines.push(`chainrpc_uptime_seconds ${uptimeSec}`);
+
+  lines.push('# HELP chainrpc_cache_entries Current number of cache entries');
+  lines.push('# TYPE chainrpc_cache_entries gauge');
+  lines.push(`chainrpc_cache_entries ${cache.size}`);
+
+  lines.push('# HELP chainrpc_requests_total Total RPC requests by chain');
+  lines.push('# TYPE chainrpc_requests_total counter');
+  for (const [chain, count] of metrics.requestsTotal) {
+    lines.push(`chainrpc_requests_total{chain="${chain}"} ${count}`);
+  }
+
+  lines.push('# HELP chainrpc_cache_hits_total Cache hits by chain');
+  lines.push('# TYPE chainrpc_cache_hits_total counter');
+  for (const [chain, count] of metrics.cacheHits) {
+    lines.push(`chainrpc_cache_hits_total{chain="${chain}"} ${count}`);
+  }
+
+  lines.push('# HELP chainrpc_cache_misses_total Cache misses by chain');
+  lines.push('# TYPE chainrpc_cache_misses_total counter');
+  for (const [chain, count] of metrics.cacheMisses) {
+    lines.push(`chainrpc_cache_misses_total{chain="${chain}"} ${count}`);
+  }
+
+  lines.push('# HELP chainrpc_errors_total Upstream errors by chain');
+  lines.push('# TYPE chainrpc_errors_total counter');
+  for (const [chain, count] of metrics.errorsTotal) {
+    lines.push(`chainrpc_errors_total{chain="${chain}"} ${count}`);
+  }
+
+  lines.push('# HELP chainrpc_upstream_latency_seconds_sum Total upstream latency by chain');
+  lines.push('# TYPE chainrpc_upstream_latency_seconds_sum counter');
+  for (const [chain, sum] of metrics.latencySum) {
+    lines.push(`chainrpc_upstream_latency_seconds_sum{chain="${chain}"} ${(sum / 1000).toFixed(3)}`);
+  }
+
+  lines.push('# HELP chainrpc_upstream_latency_seconds_count Number of upstream calls by chain');
+  lines.push('# TYPE chainrpc_upstream_latency_seconds_count counter');
+  for (const [chain, count] of metrics.latencyCount) {
+    lines.push(`chainrpc_upstream_latency_seconds_count{chain="${chain}"} ${count}`);
+  }
+
+  lines.push('# HELP chainrpc_rate_limited_total Total rate-limited requests');
+  lines.push('# TYPE chainrpc_rate_limited_total counter');
+  lines.push(`chainrpc_rate_limited_total ${metrics.rateLimited}`);
+
+  res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+  res.send(lines.join('\n') + '\n');
 });
 
-/**
- * Main RPC proxy endpoint.
- * POST /v1/:chain/:apiKey
- */
-app.post('/v1/:chain/:apiKey', async (req: Request, res: Response) => {
-  const { chain: chainParam, apiKey } = req.params;
+app.get('/v1/chains', (_req: Request, res: Response) => {
+  res.json({ chains: listPublicChainInfo() });
+});
 
-  // 1. Resolve chain alias
-  const chain = resolveChain(chainParam as string);
+// ── Main RPC handler (hostname-based) ───────────────────────────────
+
+app.post(['/', '/:apiKey'], async (req: Request, res: Response) => {
+  const hostname = (req.hostname || req.headers.host || '').split(':')[0];
+  const chain = resolveFromHostname(hostname);
+
   if (!chain) {
     res.status(400).json({
       jsonrpc: '2.0',
       error: {
         code: -32001,
-        message: `Unsupported chain: ${chainParam}. Supported: ${listChains().join(', ')}`,
+        message: `Unknown chain for hostname "${hostname}". Use {chain}.chainrpc.net. Supported: ${listChains().join(', ')}`,
       },
       id: req.body?.id || null,
     });
     return;
   }
 
-  // 2. Validate API key
-  const keyRecord = apiKeyStore.validate(apiKey as string);
-  if (!keyRecord) {
-    res.status(401).json({
-      jsonrpc: '2.0',
-      error: {
-        code: -32002,
-        message: 'Invalid or expired API key',
-      },
-      id: req.body?.id || null,
-    });
-    return;
+  const rawApiKey = req.params.apiKey;
+  const apiKey: string = (typeof rawApiKey === 'string' ? rawApiKey : '')
+    || (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : '')
+    || '';
+
+  let tier = 'free';
+  if (apiKey) {
+    const keyRecord = apiKeyStore.validate(apiKey);
+    if (!keyRecord) {
+      res.status(401).json({
+        jsonrpc: '2.0',
+        error: { code: -32002, message: 'Invalid or expired API key' },
+        id: req.body?.id || null,
+      });
+      return;
+    }
+    tier = keyRecord.tier;
   }
 
-  // 3. Check rate limits and meter
-  const meterResult = metering.check(apiKey as string, keyRecord.tier);
+  const meterId: string = apiKey || req.ip || 'anonymous';
+  const meterResult = metering.check(meterId, tier as any);
 
-  // Set rate limit headers regardless of result
   res.setHeader('X-RateLimit-Limit', meterResult.dailyLimit === Infinity ? 'unlimited' : meterResult.dailyLimit.toString());
   res.setHeader('X-RateLimit-Remaining', meterResult.dailyRemaining === Infinity ? 'unlimited' : meterResult.dailyRemaining.toString());
   res.setHeader('X-RateLimit-Reset', meterResult.resetAt.toString());
+  res.setHeader('X-Chain', chain);
 
   if (!meterResult.allowed) {
-    const messages: Record<string, string> = {
-      rate_limit: `Rate limit exceeded (${TIERS[keyRecord.tier].ratePerSec} req/sec). Slow down.`,
-      daily_limit: `Daily request limit exceeded (${TIERS[keyRecord.tier].dailyLimit}). Resets at midnight UTC.`,
-      monthly_limit: `Monthly request limit exceeded (${TIERS[keyRecord.tier].monthlyLimit}). Upgrade your tier.`,
-    };
+    metrics.rateLimited++;
     res.status(429).json({
       jsonrpc: '2.0',
       error: {
         code: -32005,
-        message: messages[meterResult.reason || 'unknown'] || 'Rate limit exceeded',
+        message: `Rate limit exceeded. ${apiKey ? 'Upgrade your tier.' : 'Get a free API key at chainrpc.net for higher limits.'}`,
       },
       id: req.body?.id || null,
     });
     return;
   }
 
-  // 4. Get chain endpoint
+  incMetric(metrics.requestsTotal, chain);
+
   const endpoint = getEndpoint(chain);
   if (!endpoint) {
     res.status(503).json({
       jsonrpc: '2.0',
-      error: {
-        code: -32003,
-        message: `Chain ${chain} is not available. Node may be syncing.`,
-      },
+      error: { code: -32003, message: `Chain ${chain} is not available` },
       id: req.body?.id || null,
     });
     return;
   }
 
-  // 5. Check cache before forwarding to upstream
   const method = req.body?.method || '';
   const params = req.body?.params || [];
   const ttl = getTTL(method, params);
   const cacheKey = buildCacheKey(chain, method, params);
 
-  // Check cache (skip for write operations)
   if (ttl > 0) {
     const cached = getCached(cacheKey);
     if (cached) {
+      incMetric(metrics.cacheHits, chain);
       res.setHeader('X-Cache', 'HIT');
-      res.setHeader('X-Chain', chain);
       res.setHeader('X-Upstream-Latency', '0ms');
       res.status(200).json({ ...cached, id: req.body?.id || null });
       return;
     }
   }
 
-  // 6. Forward JSON-RPC request to chain node (cache miss or write op)
   try {
     const startTime = Date.now();
-
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body),
-      signal: AbortSignal.timeout(30_000), // 30s timeout
+      signal: AbortSignal.timeout(30_000),
     });
 
     const data: any = await response.json();
     const latency = Date.now() - startTime;
 
-    // Cache the response if cacheable and successful (no error in response)
-    if (ttl > 0 && !data.error) {
-      setCache(cacheKey, data, ttl);
-    }
+    incMetric(metrics.cacheMisses, chain);
+    incMetric(metrics.latencySum, chain, latency);
+    incMetric(metrics.latencyCount, chain);
 
-    // Add latency/cache headers for debugging
+    if (ttl > 0 && !data.error) setCache(cacheKey, data, ttl);
+
     res.setHeader('X-Cache', 'MISS');
     res.setHeader('X-Upstream-Latency', `${latency}ms`);
-    res.setHeader('X-Chain', chain);
-
     res.status(response.status).json(data);
   } catch (err: any) {
+    incMetric(metrics.errorsTotal, chain);
     if (err.name === 'AbortError' || err.name === 'TimeoutError') {
       res.status(504).json({
         jsonrpc: '2.0',
-        error: {
-          code: -32004,
-          message: `Chain node timeout (30s). The node may be overloaded.`,
-        },
+        error: { code: -32004, message: 'Chain node timeout (30s)' },
         id: req.body?.id || null,
       });
       return;
     }
-
     console.error(`[${chain}] Upstream error:`, err.message);
-    res.status(502).json({
+    res.status(503).json({
       jsonrpc: '2.0',
-      error: {
-        code: -32003,
-        message: 'Chain node unavailable',
-      },
+      error: { code: -32003, message: 'Chain node unavailable' },
       id: req.body?.id || null,
     });
   }
 });
 
-/**
- * Catch-all for unsupported routes.
- */
+// ── Backward compat: path-based → 301 redirect to hostname ──────────
+
+app.post('/v1/:chain', (req: Request, res: Response) => {
+  const chain = resolveChain(req.params.chain as string);
+  const config = getChainConfig(chain || '');
+  const domain = process.env.CHAINRPC_DOMAIN || 'chainrpc.net';
+  if (config) {
+    res.redirect(301, `https://${config.subdomain}.${domain}/`);
+  } else {
+    res.status(400).json({ error: `Unknown chain: ${req.params.chain}` });
+  }
+});
+
+app.post('/v1/:chain/:apiKey', (req: Request, res: Response) => {
+  const chain = resolveChain(req.params.chain as string);
+  const config = getChainConfig(chain || '');
+  const domain = process.env.CHAINRPC_DOMAIN || 'chainrpc.net';
+  if (config) {
+    res.redirect(301, `https://${config.subdomain}.${domain}/${req.params.apiKey}`);
+  } else {
+    res.status(400).json({ error: `Unknown chain: ${req.params.chain}` });
+  }
+});
+
+// ── Catch-all ───────────────────────────────────────────────────────
+
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
-    error: 'Not found. Use POST /v1/{chain}/{apiKey} for RPC calls.',
-    docs: 'https://rpc.opsalis.com/docs',
+    error: 'Not found. POST JSON-RPC to https://{chain}.chainrpc.net/',
+    chains: 'https://chainrpc.net/v1/chains',
   });
 });
 
-/**
- * Start server.
- */
-app.listen(PORT, () => {
-  console.log(`RPCaaS proxy listening on :${PORT}`);
-  console.log(`Supported chains: ${listChains().join(', ')}`);
+// ── Start ───────────────────────────────────────────────────────────
 
-  // Seed demo keys in development
+app.listen(PORT, () => {
+  const chains = listChains();
+  console.log(`ChainRPC proxy v2.0.0 listening on :${PORT}`);
+  console.log(`Supported chains (${chains.length}): ${chains.join(', ')}`);
+  console.log(`Routing: hostname-based ({chain}.chainrpc.net)`);
+
   if (process.env.NODE_ENV !== 'production') {
     console.log('Seeding demo API keys:');
     apiKeyStore.seedDemoKeys();
