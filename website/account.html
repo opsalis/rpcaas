@@ -116,7 +116,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-value" id="allowance">—</div>
-            <div class="stat-label">Allowance</div>
+            <div class="stat-label">Remaining USDC</div>
           </div>
         </div>
         <div style="font-size:0.85rem; color:var(--text-secondary);">
@@ -191,10 +191,12 @@
 
       // In production: query L2 + Base here using ethers.js
       // For now: placeholder data
-      document.getElementById('tier').textContent = 'Free';
+      document.getElementById('tier').textContent = 'Growth';
       document.getElementById('status').textContent = 'Active';
-      document.getElementById('rate-limit').textContent = '3/s';
+      document.getElementById('rate-limit').textContent = '30/s';
+      document.getElementById('allowance').textContent = '$142.00';
       document.getElementById('usage-today').textContent = '4,218';
+      document.getElementById('usage-today-limit').textContent = '/ 500,000';
       document.getElementById('usage-today-limit').textContent = '/ 25,000';
       document.getElementById('usage-month').textContent = '38,740';
       document.getElementById('overflow-cost').textContent = '$0.00';
