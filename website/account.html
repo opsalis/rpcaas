@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChainRPC — Account &amp; Usage Dashboard</title>
+  <title>ChainRPC — Account</title>
   <meta name="description" content="View your ChainRPC API key usage, billing, payment history, and account status. Manage your multi-chain RPC subscription.">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://chainrpc.net/account.html">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://chainrpc.net/account.html">
-  <meta property="og:title" content="ChainRPC — Account">
-  <meta property="og:description" content="View usage, billing, and payment history for your ChainRPC API key.">
-  <meta property="og:site_name" content="ChainRPC">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230066ff'/%3E%3Cpath d='M8 16h4l2-4 4 8 2-4h4' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- ethers.js v6 — for wallet connection and contract calls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"
+          integrity="sha512-6Srd0D9n+bZUHSnheZMu5jWf2S7rKqJHnIHXvoBhVzPSYnFe4Jmn1nGaHwOjLZmV9a7aBbJ1+JMRJHhFECfQ=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -51,6 +53,7 @@
     .stat-item { text-align: center; }
     .stat-value { font-size: 1.5rem; font-weight: 700; }
     .stat-value.green { color: var(--green); }
+    .stat-value.orange { color: var(--orange); }
     .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
 
     .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 12px 0; }
@@ -59,12 +62,16 @@
     table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     th { text-align: left; padding: 10px 12px; font-weight: 600; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); }
     td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+    td a { color: var(--blue); font-size: 0.8rem; }
 
-    .btn { display: inline-flex; align-items: center; padding: 10px 18px; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn { display: inline-flex; align-items: center; padding: 10px 18px; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem; cursor: pointer; border: none; transition: all 0.2s; gap: 8px; }
     .btn-primary { background: var(--blue); color: #fff; }
     .btn-primary:hover { background: var(--blue-dim); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-outline { border: 1px solid var(--border); color: var(--text-secondary); background: var(--bg); }
     .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+    .btn-danger { border: 1px solid var(--red); color: var(--red); background: var(--bg); }
+    .btn-danger:hover { background: #fef2f2; }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
     .key-input-wrap { display: flex; gap: 8px; }
@@ -73,7 +80,37 @@
 
     #account-data { display: none; }
 
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 16px; }
+    .alert-info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+    .alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .alert-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+    .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-free { background: #f1f5f9; color: #475569; }
+    .badge-growth { background: #eff6ff; color: #1d4ed8; }
+    .badge-pro { background: #fdf4ff; color: #7e22ce; }
+    .badge-active { background: #f0fdf4; color: #166534; }
+    .badge-inactive { background: #fef2f2; color: #991b1b; }
+
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,102,255,0.3); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .tier-select { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .tier-option { border: 2px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+    .tier-option:hover { border-color: var(--blue); }
+    .tier-option.selected { border-color: var(--blue); background: var(--blue-light); }
+    .tier-option .tier-name { font-weight: 700; margin-bottom: 4px; }
+    .tier-option .tier-price { color: var(--blue); font-size: 1.1rem; font-weight: 700; }
+    .tier-option .tier-desc { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+
     footer { border-top: 1px solid var(--border); padding: 24px 0; margin-top: 48px; text-align: center; font-size: 0.8rem; color: #94a3b8; }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--bg); border-radius: 16px; padding: 32px; max-width: 480px; width: 100%; margin: 20px; }
+    .modal h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; }
+    .modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); margin-top: -8px; }
   </style>
 </head>
 <body>
@@ -88,96 +125,166 @@
     </div>
   </nav>
 
+  <!-- Subscribe Modal -->
+  <div class="modal-overlay" id="subscribe-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('subscribe-modal')">&times;</button>
+      <h3>Upgrade subscription</h3>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:20px;">
+        Your wallet will approve our billing contract. Funds stay in your wallet — we pull the subscription monthly. Revoke the approval at any time to cancel.
+      </p>
+
+      <div class="tier-select">
+        <div class="tier-option selected" id="opt-growth" onclick="selectTier(1)">
+          <div class="tier-name">Growth</div>
+          <div class="tier-price">$29/mo</div>
+          <div class="tier-desc">500K req/day · 30/s · $10/M overflow</div>
+        </div>
+        <div class="tier-option" id="opt-pro" onclick="selectTier(2)">
+          <div class="tier-name">Pro</div>
+          <div class="tier-price">$99/mo</div>
+          <div class="tier-desc">5M req/day · 100/s · $5/M overflow</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:8px;">Payment token</label>
+        <select id="token-select" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.9rem;outline:none;">
+          <option value="usdc">USDC (Base Sepolia test)</option>
+          <option value="real-usdc">USDC (Base Mainnet — not yet available)</option>
+        </select>
+      </div>
+
+      <div id="modal-alert" style="display:none;" class="alert alert-info"></div>
+
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn btn-primary" id="subscribe-btn" onclick="doSubscribe()" style="flex:1;">
+          Connect wallet &amp; subscribe
+        </button>
+        <button class="btn btn-outline" onclick="closeModal('subscribe-modal')">Cancel</button>
+      </div>
+
+      <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:12px;">
+        First month charged immediately. Subsequent months pulled automatically. Cancel by revoking the USDC/USDT approval in your wallet.
+      </p>
+    </div>
+  </div>
+
+  <!-- Top Up Modal -->
+  <div class="modal-overlay" id="topup-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('topup-modal')">&times;</button>
+      <h3>Increase allowance</h3>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:20px;">
+        Add more to your USDC/USDT approval so we can pull future subscription and overflow charges. Your funds stay in your wallet.
+      </p>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.85rem;font-weight:600;display:block;margin-bottom:8px;">Additional allowance (USDC)</label>
+        <input type="number" id="topup-amount" value="100" min="1" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:0.9rem;outline:none;">
+      </div>
+      <div id="topup-alert" style="display:none;" class="alert alert-info"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="doTopUp()" style="flex:1;">Approve in wallet</button>
+        <button class="btn btn-outline" onclick="closeModal('topup-modal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <h1 class="page-title">Account</h1>
 
-    <!-- Key input — always visible first -->
+    <!-- Key input -->
     <div class="card" id="key-form">
-      <p style="margin-bottom:16px; color:var(--text-secondary);">Enter your API key to view usage, billing, and download receipts.</p>
+      <p style="margin-bottom:16px;color:var(--text-secondary);">Enter your API key to view usage, billing, and manage your subscription.</p>
       <div class="key-input-wrap">
         <input type="text" id="key-input" placeholder="rpk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" spellcheck="false" autocomplete="off">
-        <button class="btn btn-primary" onclick="loadAccount()">Go</button>
+        <button class="btn btn-primary" id="load-btn" onclick="loadAccount()">Go</button>
       </div>
     </div>
 
-    <!-- Account data — hidden until key entered -->
+    <!-- Account data -->
     <div id="account-data">
 
       <div class="card">
-        <div class="card-title">Key</div>
-        <div style="font-family:'JetBrains Mono',monospace; font-size:0.9rem; color:var(--text-secondary); word-break:break-all;" id="display-key"></div>
+        <div class="card-title">API Key</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--text-secondary);word-break:break-all;" id="display-key"></div>
+        <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:8px;">
+          Key hash: <code id="display-keyhash" style="font-size:0.75rem;"></code>
+        </div>
       </div>
 
       <div class="card">
         <div class="card-title">Subscription</div>
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-value" id="tier">Free</div>
-            <div class="stat-label">Tier</div>
+        <div id="subscription-loading" style="text-align:center;padding:20px;">
+          <div class="spinner"></div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:8px;">Loading from chain...</div>
+        </div>
+        <div id="subscription-content" style="display:none;">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="tier">—</div>
+              <div class="stat-label">Tier</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value green" id="status">—</div>
+              <div class="stat-label">Status</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="rate-limit">—</div>
+              <div class="stat-label">Rate limit</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="allowance">—</div>
+              <div class="stat-label" id="allowance-label">USDC allowance</div>
+            </div>
           </div>
-          <div class="stat-item">
-            <div class="stat-value green" id="status">Active</div>
-            <div class="stat-label">Status</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);">
+            Wallet: <code id="wallet-display">Not linked</code>
           </div>
-          <div class="stat-item">
-            <div class="stat-value" id="rate-limit">3/s</div>
-            <div class="stat-label">Rate limit</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="allowance">—</div>
-            <div class="stat-label" id="allowance-label">Remaining</div>
+          <div id="subscribed-since" style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px;display:none;">
+            Subscribed: <span id="subscribed-date"></span>
           </div>
         </div>
-        <div style="font-size:0.85rem; color:var(--text-secondary);">
-          Wallet: <code id="wallet">Not linked</code>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Usage</div>
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-value" id="usage-today">0</div>
-            <div class="stat-label">Today</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="usage-today-limit">25,000</div>
-            <div class="stat-label">Daily limit</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="usage-month">0</div>
-            <div class="stat-label">This month</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="overflow-cost">$0.00</div>
-            <div class="stat-label">Overflow cost</div>
-          </div>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="usage-bar" style="width:0%"></div>
-        </div>
-        <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Daily usage</div>
+        <div id="subscription-error" style="display:none;" class="alert alert-warn"></div>
       </div>
 
       <div class="card">
         <div class="card-title">Actions</div>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="alert('Connect your wallet to increase your USDC/USDT approval.')">Top Up</button>
-          <button class="btn btn-outline" onclick="if(confirm('This will kill your current key and create a new one. Tier and balance transfer. Continue?')) alert('Available when billing is live.')">Regenerate Key</button>
+        <div id="actions-free" class="btn-row" style="display:none;">
+          <button class="btn btn-primary" onclick="openModal('subscribe-modal')">
+            Upgrade to paid plan
+          </button>
+        </div>
+        <div id="actions-paid" class="btn-row" style="display:none;">
+          <button class="btn btn-primary" onclick="openModal('topup-modal')">
+            Top Up allowance
+          </button>
+          <button class="btn btn-danger" onclick="showCancelInfo()">
+            Cancel subscription
+          </button>
+        </div>
+        <div id="cancel-info" style="display:none;margin-top:12px;" class="alert alert-info">
+          To cancel: open your wallet (MetaMask / Rabby / etc.), go to the token approval for USDC or USDT, find ChainRPC billing contract and set allowance to 0. Your key reverts to the free tier immediately.
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">Payment history</div>
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Amount</th><th>Type</th><th>Receipt</th></tr>
-          </thead>
-          <tbody id="payments-table">
-            <tr><td colspan="4" style="text-align:center; padding:24px; color:var(--text-secondary);">No payments yet.</td></tr>
-          </tbody>
-        </table>
+        <div id="payments-loading" style="text-align:center;padding:16px;">
+          <div class="spinner"></div>
+        </div>
+        <div id="payments-content" style="display:none;">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Amount</th><th>Type</th><th>Tx</th></tr>
+            </thead>
+            <tbody id="payments-table">
+              <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-secondary);">No payments yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -186,46 +293,348 @@
   </footer>
 
   <script>
-    function loadAccount() {
-      var key = document.getElementById('key-input').value.trim();
-      if (!key || !key.startsWith('rpk_')) return;
+  // ── Config ──────────────────────────────────────────────────────────
+  var WORKER_URL     = 'https://api.chainrpc.net';
+  var CHAIN_ID       = 84532; // Base Sepolia
+  var CHAIN_NAME     = 'Base Sepolia';
+  // Updated after deployment — replaced by deploy script
+  var BILLING_CONTRACT = '0xB22552D5C0F18c66d151e5417287E4A5cfcb147A';
+  var MOCK_USDC        = '0xb081d16D40e4e4c27D6d8564d145Ab2933037111';
+  // Known Base Sepolia USDC (Circle)
+  var USDC_SEPOLIA     = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
 
-      // Hide form, show account
-      document.getElementById('key-form').style.display = 'none';
-      document.getElementById('account-data').style.display = 'block';
+  var selectedTier  = 1; // 1=Growth, 2=Pro
+  var currentKey    = '';
+  var currentHash   = '';
+  var walletAddress = '';
+  var provider      = null;
+  var signer        = null;
+  var subscription  = null;
 
-      // Display key (masked middle)
-      var masked = key.substring(0, 8) + '...' + key.substring(key.length - 6);
-      document.getElementById('display-key').textContent = masked;
+  // ── Minimal ABI for billing contract ────────────────────────────────
+  var BILLING_ABI = [
+    'function subscribe(bytes32 keyHash, address token, uint8 tier) external',
+    'function getSubscription(bytes32 keyHash) external view returns (address wallet, address token, uint8 tier, uint256 subscribedAt, bool active)',
+    'function getAllowance(bytes32 keyHash) external view returns (uint256)',
+    'function isKeyRegistered(bytes32 keyHash) external view returns (bool)',
+  ];
 
-      // In production: query L2 + Base here using ethers.js
-      // For now: placeholder data
-      document.getElementById('tier').textContent = 'Growth';
-      document.getElementById('status').textContent = 'Active';
-      document.getElementById('rate-limit').textContent = '30/s';
-      // In production: read payment token from L2, then query allowance on Base
-      var paymentToken = 'USDC'; // or 'USDT' — from L2 subscription record
-      document.getElementById('allowance').textContent = '$142.00';
-      document.getElementById('allowance-label').textContent = paymentToken + ' allowance';
-      document.getElementById('usage-today').textContent = '4,218';
-      document.getElementById('usage-today-limit').textContent = '500,000';
-      document.getElementById('usage-month').textContent = '38,740';
-      document.getElementById('overflow-cost').textContent = '$0.00';
-      document.getElementById('usage-bar').style.width = '17%';
+  var ERC20_ABI = [
+    'function approve(address spender, uint256 amount) external returns (bool)',
+    'function allowance(address owner, address spender) external view returns (uint256)',
+    'function balanceOf(address owner) external view returns (uint256)',
+    'function symbol() external view returns (string)',
+  ];
+
+  // ── Key hash computation ─────────────────────────────────────────────
+  async function computeKeyHash(key) {
+    var enc = new TextEncoder();
+    var buf = await crypto.subtle.digest('SHA-256', enc.encode(key));
+    var arr = new Uint8Array(buf);
+    return '0x' + Array.from(arr).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────────────
+  function show(id) { document.getElementById(id).style.display = 'block'; }
+  function hide(id) { document.getElementById(id).style.display = 'none'; }
+  function setText(id, text) { document.getElementById(id).textContent = text; }
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function showCancelInfo() { document.getElementById('cancel-info').style.display = 'block'; }
+
+  function selectTier(tier) {
+    selectedTier = tier;
+    document.getElementById('opt-growth').classList.toggle('selected', tier === 1);
+    document.getElementById('opt-pro').classList.toggle('selected', tier === 2);
+  }
+
+  function formatUSDC(raw) {
+    var n = BigInt(raw);
+    var dollars = n / 1000000n;
+    var cents = (n % 1000000n) / 10000n;
+    return '$' + dollars + '.' + cents.toString().padStart(2, '0');
+  }
+
+  function formatDate(ts) {
+    return new Date(ts * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function shortAddr(addr) {
+    if (!addr || addr === '0x' + '0'.repeat(40)) return 'Not linked';
+    return addr.slice(0, 6) + '...' + addr.slice(-4);
+  }
+
+  // ── Load account from Worker API ─────────────────────────────────────
+  async function loadAccount() {
+    var key = document.getElementById('key-input').value.trim();
+    if (!key || !key.startsWith('rpk_')) {
+      alert('Please enter a valid key starting with rpk_');
+      return;
     }
 
-    // Handle Enter key
-    document.getElementById('key-input').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') loadAccount();
-    });
+    currentKey = key;
+    currentHash = await computeKeyHash(key);
 
-    // Check URL param too (for when deployed on a real server)
-    var params = new URLSearchParams(window.location.search);
-    var keyParam = params.get('key');
-    if (keyParam && keyParam.startsWith('rpk_')) {
-      document.getElementById('key-input').value = keyParam;
-      loadAccount();
+    // Hide form, show account shell
+    document.getElementById('key-form').style.display = 'none';
+    document.getElementById('account-data').style.display = 'block';
+
+    var masked = key.slice(0, 8) + '...' + key.slice(-6);
+    setText('display-key', masked);
+    setText('display-keyhash', currentHash.slice(0, 18) + '...');
+
+    // Load subscription data
+    await fetchAccountData();
+  }
+
+  async function fetchAccountData() {
+    // Show loading state
+    show('subscription-loading');
+    hide('subscription-content');
+    hide('subscription-error');
+    show('payments-loading');
+    hide('payments-content');
+    hide('actions-free');
+    hide('actions-paid');
+
+    try {
+      var url = WORKER_URL + '/api/account/' + currentHash;
+      var resp = await fetch(url);
+      var data = await resp.json();
+
+      renderAccount(data);
+    } catch (e) {
+      // Worker not yet deployed or contract not deployed — show placeholder
+      console.warn('Worker API unavailable:', e.message);
+      renderAccountFallback();
     }
+  }
+
+  function renderAccount(data) {
+    hide('subscription-loading');
+    show('subscription-content');
+    hide('subscription-error');
+
+    subscription = data.subscription;
+
+    if (subscription && subscription.active) {
+      // Paid tier
+      var tierName = subscription.tierName || 'Growth';
+      setText('tier', tierName);
+      document.getElementById('tier').className = 'stat-value';
+
+      setText('status', 'Active');
+      document.getElementById('status').className = 'stat-value green';
+
+      var limits = data.limits || {};
+      var rps = limits.ratePerSec || 30;
+      setText('rate-limit', rps + '/s');
+
+      var walletShort = shortAddr(subscription.wallet);
+      setText('wallet-display', walletShort);
+
+      if (subscription.allowanceFormatted) {
+        setText('allowance', subscription.allowanceFormatted);
+        setText('allowance-label', (subscription.tokenSymbol || 'USDC') + ' allowance');
+      } else if (subscription.allowanceRaw) {
+        setText('allowance', formatUSDC(subscription.allowanceRaw));
+      } else {
+        setText('allowance', '—');
+      }
+
+      if (subscription.subscribedAt) {
+        setText('subscribed-date', formatDate(subscription.subscribedAt));
+        show('subscribed-since');
+      }
+
+      show('actions-paid');
+    } else {
+      // Free tier
+      setText('tier', 'Free');
+      document.getElementById('tier').className = 'stat-value';
+      setText('status', 'Active');
+      document.getElementById('status').className = 'stat-value green';
+      setText('rate-limit', '3/s');
+      setText('allowance', '—');
+      setText('wallet-display', 'Not linked');
+
+      show('actions-free');
+    }
+
+    // Payment history — read from chain events via worker
+    loadPaymentHistory();
+  }
+
+  function renderAccountFallback() {
+    // Worker or contract not yet deployed — show free tier state
+    hide('subscription-loading');
+    show('subscription-content');
+
+    setText('tier', 'Free');
+    setText('status', 'Active');
+    setText('rate-limit', '3/s');
+    setText('allowance', '—');
+    setText('wallet-display', 'Not linked');
+
+    show('actions-free');
+    hide('payments-loading');
+    show('payments-content');
+  }
+
+  async function loadPaymentHistory() {
+    // Fetch payment events from the worker
+    // For now, show placeholder — will be populated once contract is indexed
+    hide('payments-loading');
+    show('payments-content');
+    // (Real data comes from Subscribed/Pulled/OverflowCharged events)
+  }
+
+  // ── Wallet connection ─────────────────────────────────────────────────
+  async function connectWallet() {
+    if (!window.ethereum) {
+      throw new Error('No wallet detected. Please install MetaMask or Rabby.');
+    }
+
+    // Request accounts
+    await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    walletAddress = await signer.getAddress();
+
+    // Check/switch to Base Sepolia
+    var network = await provider.getNetwork();
+    if (Number(network.chainId) !== CHAIN_ID) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x' + CHAIN_ID.toString(16) }],
+        });
+      } catch (switchErr) {
+        // Chain not added — add it
+        if (switchErr.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x' + CHAIN_ID.toString(16),
+              chainName: 'Base Sepolia',
+              nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+              rpcUrls: ['https://base-sepolia.chainrpc.net'],
+              blockExplorerUrls: ['https://sepolia.basescan.org'],
+            }],
+          });
+        } else {
+          throw switchErr;
+        }
+      }
+      // Re-get signer after switch
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      walletAddress = await signer.getAddress();
+    }
+
+    return signer;
+  }
+
+  // ── Subscribe flow ────────────────────────────────────────────────────
+  async function doSubscribe() {
+    var btn = document.getElementById('subscribe-btn');
+    var alertEl = document.getElementById('modal-alert');
+
+    function setAlert(msg, type) {
+      alertEl.className = 'alert alert-' + type;
+      alertEl.textContent = msg;
+      alertEl.style.display = 'block';
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Connecting wallet...';
+    setAlert('', 'info');
+
+    try {
+      await connectWallet();
+      setAlert('Wallet connected: ' + walletAddress.slice(0,6) + '...' + walletAddress.slice(-4), 'success');
+
+      var tokenAddr = MOCK_USDC; // Base Sepolia test USDC
+      var tierAmount = selectedTier === 1 ? 29000000n : 99000000n;
+      // Approve 12x the monthly amount as initial allowance (1 year buffer)
+      var approveAmount = tierAmount * 120n;
+
+      btn.innerHTML = '<span class="spinner"></span> Step 1/2: Approve USDC...';
+      setAlert('Approving USDC in your wallet. Confirm the transaction.', 'info');
+
+      var tokenContract = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
+      var approveTx = await tokenContract.approve(BILLING_CONTRACT, approveAmount);
+      setAlert('Approval submitted. Waiting for confirmation...', 'info');
+      await approveTx.wait();
+      setAlert('USDC approved. Subscribing...', 'success');
+
+      btn.innerHTML = '<span class="spinner"></span> Step 2/2: Subscribing...';
+
+      var billingContract = new ethers.Contract(BILLING_CONTRACT, BILLING_ABI, signer);
+      var subscribeTx = await billingContract.subscribe(currentHash, tokenAddr, selectedTier);
+      setAlert('Subscription submitted. Waiting for confirmation...', 'info');
+      await subscribeTx.wait();
+
+      setAlert('Subscription active! Refreshing...', 'success');
+      closeModal('subscribe-modal');
+
+      // Reload account data
+      setTimeout(function() { fetchAccountData(); }, 2000);
+    } catch (e) {
+      setAlert('Error: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.innerHTML = 'Connect wallet &amp; subscribe';
+    }
+  }
+
+  // ── Top Up flow ───────────────────────────────────────────────────────
+  async function doTopUp() {
+    var alertEl = document.getElementById('topup-alert');
+    var amount = parseFloat(document.getElementById('topup-amount').value);
+    if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
+
+    function setAlert(msg, type) {
+      alertEl.className = 'alert alert-' + type;
+      alertEl.textContent = msg;
+      alertEl.style.display = 'block';
+    }
+
+    try {
+      await connectWallet();
+
+      var tokenAddr = (subscription && subscription.token) ? subscription.token : MOCK_USDC;
+      var amountRaw = BigInt(Math.round(amount * 1_000_000));
+
+      // Read current allowance
+      var tokenContract = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
+      var currentAllowance = await tokenContract.allowance(walletAddress, BILLING_CONTRACT);
+      var newAllowance = currentAllowance + amountRaw;
+
+      setAlert('Approving in wallet...', 'info');
+      var tx = await tokenContract.approve(BILLING_CONTRACT, newAllowance);
+      setAlert('Waiting for confirmation...', 'info');
+      await tx.wait();
+      setAlert('Allowance increased. New total: ' + formatUSDC(newAllowance.toString()), 'success');
+
+      setTimeout(function() { fetchAccountData(); closeModal('topup-modal'); }, 2000);
+    } catch (e) {
+      setAlert('Error: ' + e.message, 'error');
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  document.getElementById('key-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') loadAccount();
+  });
+
+  // Check URL param or sessionStorage
+  var params = new URLSearchParams(window.location.search);
+  var keyParam = params.get('key');
+  if (keyParam && keyParam.startsWith('rpk_')) {
+    document.getElementById('key-input').value = keyParam;
+    loadAccount();
+  }
   </script>
 </body>
 </html>

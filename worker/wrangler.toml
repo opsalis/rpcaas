@@ -1,0 +1,22 @@
+name = "chainrpc-billing"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+account_id = "a36738aa5ac5c9338878e4eb8d79eaa2"
+
+workers_dev = true
+
+[vars]
+BASE_SEPOLIA_RPC = "https://base-sepolia.chainrpc.net"
+BILLING_CONTRACT = "0xB22552D5C0F18c66d151e5417287E4A5cfcb147A"
+MOCK_USDC        = "0xb081d16D40e4e4c27D6d8564d145Ab2933037111"
+TREASURY         = "0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf"
+
+# Secrets (set via: wrangler secret put DEPLOYER_KEY)
+# DEPLOYER_KEY     — private key for operator signing (via relay)
+# OPERATOR_SECRET  — shared secret for operator-only endpoints
+
+[[routes]]
+pattern = "api.chainrpc.net/*"
+zone_name = "chainrpc.net"

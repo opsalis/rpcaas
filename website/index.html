@@ -317,6 +317,8 @@
   </footer>
 
   <script>
+    var WORKER_URL = 'https://api.chainrpc.net';
+
     function copyKey() {
       var key = document.getElementById('key-text').textContent;
       navigator.clipboard.writeText(key);
@@ -335,10 +337,7 @@
       setTimeout(function() { icon.style.opacity = '0.5'; icon.querySelector('path').setAttribute('stroke', '#94a3b8'); icon.querySelector('rect').setAttribute('stroke', '#94a3b8'); }, 1500);
     }
 
-    function generateKey() {
-      var chars = '0123456789abcdef';
-      var key = 'rpk_';
-      for (var i = 0; i < 32; i++) key += chars[Math.floor(Math.random() * 16)];
+    function showKey(key) {
       document.getElementById('key-text').textContent = key;
       document.getElementById('key-display').style.display = 'block';
       document.getElementById('key-warning').style.display = 'block';
@@ -347,6 +346,32 @@
       document.getElementById('gen-btn').textContent = 'Key generated';
       document.getElementById('gen-btn').disabled = true;
       document.getElementById('gen-btn').style.opacity = '0.5';
+    }
+
+    function generateKey() {
+      var btn = document.getElementById('gen-btn');
+      btn.textContent = 'Generating...';
+      btn.disabled = true;
+
+      fetch(WORKER_URL + '/api/generate-key', { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.key) {
+            showKey(data.key);
+            // Store keyHash in sessionStorage for seamless account page link
+            sessionStorage.setItem('chainrpc_keyhash', data.keyHash || '');
+          } else {
+            throw new Error(data.error || 'Unknown error');
+          }
+        })
+        .catch(function(err) {
+          // Fallback: generate client-side if worker is unreachable
+          console.warn('Worker unavailable, generating key client-side:', err.message);
+          var chars = '0123456789abcdef';
+          var key = 'rpk_';
+          for (var i = 0; i < 32; i++) key += chars[Math.floor(Math.random() * 16)];
+          showKey(key);
+        });
     }
   </script>
 </body>
