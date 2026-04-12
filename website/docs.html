@@ -3,132 +3,238 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RPCaaS - Documentation</title>
+  <title>ChainRPC — Documentation</title>
+  <meta name="description" content="ChainRPC API documentation. How to connect, authenticate, and use multi-chain RPC endpoints.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230066ff'/%3E%3Cpath d='M8 16h4l2-4 4 8 2-4h4' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', system-ui, sans-serif; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #0066ff;
+      --blue-dim: #0052cc;
+      --blue-light: #e8f0fe;
+      --text: #1a1a2e;
+      --text-secondary: #555770;
+      --bg: #ffffff;
+      --bg-alt: #f7f8fc;
+      --border: #e4e7ec;
+      --green: #00b87a;
+      --radius: 10px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; -webkit-font-smoothing: antialiased; }
     code, pre { font-family: 'JetBrains Mono', monospace; }
-    .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; overflow-x: auto; }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+
+    /* Nav */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    nav .inner { max-width: 800px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; color: var(--text); }
+    .logo svg { width: 28px; height: 28px; }
+    .nav-links { display: flex; gap: 24px; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
+    .nav-links a { color: var(--text-secondary); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-links a.active { color: var(--text); }
+
+    /* Content */
+    h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -1px; margin: 48px 0 16px; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 32px 0 12px; }
+    p { margin-bottom: 16px; color: var(--text-secondary); }
+    ul, ol { margin-bottom: 16px; padding-left: 24px; color: var(--text-secondary); }
+    li { margin-bottom: 8px; }
+    code { background: var(--bg-alt); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; font-size: 0.85em; color: var(--text); }
+    pre { background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 20px 24px; overflow-x: auto; margin-bottom: 24px; font-size: 0.85rem; line-height: 1.6; }
+    pre code { background: none; border: none; padding: 0; color: inherit; }
+    .comment { color: #64748b; }
+    .str { color: #86efac; }
+    .kw { color: #93c5fd; }
+
+    /* Account lookup */
+    .lookup-box { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 32px; margin: 32px 0; }
+    .lookup-box h2 { border: none; padding-top: 0; margin-top: 0; margin-bottom: 12px; }
+    .lookup-box p { margin-bottom: 16px; }
+    .lookup-input { display: flex; gap: 8px; }
+    .lookup-input input { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; outline: none; }
+    .lookup-input input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; transition: all 0.2s; cursor: pointer; border: none; background: var(--blue); color: #fff; }
+    .btn:hover { background: var(--blue-dim); text-decoration: none; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 0.9rem; }
+    th { text-align: left; padding: 12px 16px; background: var(--bg-alt); border: 1px solid var(--border); font-weight: 600; color: var(--text); }
+    td { padding: 12px 16px; border: 1px solid var(--border); color: var(--text-secondary); }
+
+    footer { border-top: 1px solid var(--border); padding: 32px 0; margin-top: 64px; text-align: center; font-size: 0.8rem; color: #94a3b8; }
   </style>
 </head>
-<body class="bg-white text-gray-900 antialiased">
-  <nav class="border-b border-gray-200 bg-white sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="/" class="text-xl font-bold tracking-tight">
-        <span class="text-indigo-500">RPC</span><span class="text-gray-900">aaS</span>
+<body>
+
+  <nav>
+    <div class="inner">
+      <a href="/" class="logo" style="text-decoration:none">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="6" fill="#0066ff"/><path d="M8 16h4l2-4 4 8 2-4h4" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Chain<span style="color:var(--blue)">RPC</span></span>
       </a>
-      <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
-        <a href="/" class="hover:text-gray-900">Home</a>
-        <a href="/docs.html" class="text-gray-900">Docs</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/docs.html" class="active">Docs</a>
+        <a href="/terms.html">Terms</a>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-4xl mx-auto px-6 py-16">
-    <h1 class="text-4xl font-bold mb-8">Documentation</h1>
+  <div class="container" style="padding-top:16px; padding-bottom:80px;">
 
-    <section class="mb-12">
-      <h2 class="text-2xl font-bold mb-4">Endpoint Format</h2>
-      <div class="code-block p-4 text-sm mb-4">
-        <pre>POST https://rpc.opsalis.com/v1/{chain}/{apiKey}</pre>
+    <!-- Account lookup -->
+    <div class="lookup-box">
+      <h2>Your account</h2>
+      <p>Enter your API key to view usage, billing, and download receipts.</p>
+      <div class="lookup-input">
+        <input type="text" id="key-input" placeholder="rpk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" spellcheck="false" autocomplete="off">
+        <button class="btn" onclick="goToAccount()">Go</button>
       </div>
-      <p class="text-gray-600 mb-4">Replace <code class="bg-gray-100 px-2 py-0.5 rounded text-sm">{chain}</code> with a chain name, alias, or chain ID. Replace <code class="bg-gray-100 px-2 py-0.5 rounded text-sm">{apiKey}</code> with your API key.</p>
+    </div>
 
-      <h3 class="text-lg font-semibold mb-2 mt-6">Chain Identifiers</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm border border-gray-200 rounded-lg">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="text-left py-2 px-4 border-b">Chain</th>
-              <th class="text-left py-2 px-4 border-b">ID</th>
-              <th class="text-left py-2 px-4 border-b">Accepted Values</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-b"><td class="py-2 px-4">Base</td><td class="py-2 px-4">8453</td><td class="py-2 px-4"><code>base</code>, <code>base-mainnet</code>, <code>8453</code></td></tr>
-            <tr class="border-b"><td class="py-2 px-4">Optimism</td><td class="py-2 px-4">10</td><td class="py-2 px-4"><code>optimism</code>, <code>op</code>, <code>op-mainnet</code>, <code>10</code></td></tr>
-            <tr class="border-b"><td class="py-2 px-4">Arbitrum</td><td class="py-2 px-4">42161</td><td class="py-2 px-4"><code>arbitrum</code>, <code>arb</code>, <code>arbitrum-one</code>, <code>42161</code></td></tr>
-            <tr class="border-b"><td class="py-2 px-4">Polygon</td><td class="py-2 px-4">137</td><td class="py-2 px-4"><code>polygon</code>, <code>matic</code>, <code>polygon-pos</code>, <code>137</code></td></tr>
-            <tr><td class="py-2 px-4">Ethereum</td><td class="py-2 px-4">1</td><td class="py-2 px-4"><code>ethereum</code>, <code>eth</code>, <code>mainnet</code>, <code>1</code></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <h1>Documentation</h1>
 
-    <section class="mb-12">
-      <h2 class="text-2xl font-bold mb-4">Rate Limits</h2>
-      <table class="w-full text-sm border border-gray-200 rounded-lg">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="text-left py-2 px-4 border-b">Tier</th>
-            <th class="text-left py-2 px-4 border-b">Daily</th>
-            <th class="text-left py-2 px-4 border-b">Monthly</th>
-            <th class="text-left py-2 px-4 border-b">Per Second</th>
-            <th class="text-left py-2 px-4 border-b">Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="border-b"><td class="py-2 px-4">Free</td><td class="py-2 px-4">100K</td><td class="py-2 px-4">3M</td><td class="py-2 px-4">10</td><td class="py-2 px-4">$0</td></tr>
-          <tr class="border-b"><td class="py-2 px-4">Growth</td><td class="py-2 px-4">1M</td><td class="py-2 px-4">30M</td><td class="py-2 px-4">50</td><td class="py-2 px-4">$10</td></tr>
-          <tr class="border-b"><td class="py-2 px-4">Pro</td><td class="py-2 px-4">10M</td><td class="py-2 px-4">300M</td><td class="py-2 px-4">200</td><td class="py-2 px-4">$50</td></tr>
-          <tr><td class="py-2 px-4">Enterprise</td><td class="py-2 px-4">Unlimited</td><td class="py-2 px-4">Unlimited</td><td class="py-2 px-4">1,000</td><td class="py-2 px-4">$200</td></tr>
-        </tbody>
-      </table>
-      <p class="text-gray-600 text-sm mt-4">Rate limit headers are included in every response: <code class="bg-gray-100 px-1 rounded">X-RateLimit-Limit</code>, <code class="bg-gray-100 px-1 rounded">X-RateLimit-Remaining</code>, <code class="bg-gray-100 px-1 rounded">X-RateLimit-Reset</code>.</p>
-    </section>
+    <h2 id="quickstart">Quick start</h2>
+    <p>ChainRPC is a standard JSON-RPC endpoint. Use it with any client — ethers.js, viem, web3.js, MetaMask, Hardhat, Foundry.</p>
 
-    <section class="mb-12">
-      <h2 class="text-2xl font-bold mb-4">Error Codes</h2>
-      <table class="w-full text-sm border border-gray-200 rounded-lg">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="text-left py-2 px-4 border-b">HTTP</th>
-            <th class="text-left py-2 px-4 border-b">Code</th>
-            <th class="text-left py-2 px-4 border-b">Meaning</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="border-b"><td class="py-2 px-4">400</td><td class="py-2 px-4">-32001</td><td class="py-2 px-4">Unsupported chain</td></tr>
-          <tr class="border-b"><td class="py-2 px-4">401</td><td class="py-2 px-4">-32002</td><td class="py-2 px-4">Invalid API key</td></tr>
-          <tr class="border-b"><td class="py-2 px-4">429</td><td class="py-2 px-4">-32005</td><td class="py-2 px-4">Rate limit exceeded</td></tr>
-          <tr class="border-b"><td class="py-2 px-4">502</td><td class="py-2 px-4">-32003</td><td class="py-2 px-4">Node unavailable</td></tr>
-          <tr><td class="py-2 px-4">504</td><td class="py-2 px-4">-32004</td><td class="py-2 px-4">Node timeout</td></tr>
-        </tbody>
-      </table>
-    </section>
+    <h3>Endpoint format</h3>
+    <pre><code>https://{chain}.chainrpc.net/{your_api_key}</code></pre>
+    <p>Replace <code>{chain}</code> with any supported chain subdomain and <code>{your_api_key}</code> with your key.</p>
 
-    <section class="mb-12">
-      <h2 class="text-2xl font-bold mb-4">Supported Methods</h2>
-      <p class="text-gray-600 mb-4">All standard Ethereum JSON-RPC methods are supported. The most commonly used:</p>
-      <div class="grid md:grid-cols-2 gap-2 text-sm">
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_blockNumber</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getBlockByNumber</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getBlockByHash</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getTransactionByHash</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getTransactionReceipt</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_call</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_estimateGas</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_sendRawTransaction</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getBalance</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getCode</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getStorageAt</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_getLogs</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_gasPrice</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">eth_chainId</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">net_version</code>
-        <code class="bg-gray-100 px-3 py-1.5 rounded">web3_clientVersion</code>
-      </div>
-    </section>
+    <h3>Example: ethers.js</h3>
+    <pre><code><span class="kw">import</span> { JsonRpcProvider } <span class="kw">from</span> <span class="str">'ethers'</span>;
+
+<span class="kw">const</span> provider = <span class="kw">new</span> JsonRpcProvider(
+  <span class="str">'https://base.chainrpc.net/rpk_YOUR_KEY'</span>
+);
+<span class="kw">const</span> block = <span class="kw">await</span> provider.getBlockNumber();
+console.log(block);</code></pre>
+
+    <h3>Example: viem</h3>
+    <pre><code><span class="kw">import</span> { createPublicClient, http } <span class="kw">from</span> <span class="str">'viem'</span>;
+<span class="kw">import</span> { base } <span class="kw">from</span> <span class="str">'viem/chains'</span>;
+
+<span class="kw">const</span> client = createPublicClient({
+  chain: base,
+  transport: http(<span class="str">'https://base.chainrpc.net/rpk_YOUR_KEY'</span>),
+});</code></pre>
+
+    <h3>Example: curl</h3>
+    <pre><code>curl -X POST https://base.chainrpc.net/rpk_YOUR_KEY \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'</code></pre>
+
+    <h3>Example: MetaMask</h3>
+    <p>Settings → Networks → Add Network → paste:</p>
+    <pre><code>https://base.chainrpc.net/rpk_YOUR_KEY</code></pre>
+
+    <h2 id="chains">Supported chains</h2>
+    <table>
+      <tr><th>Chain</th><th>Subdomain</th><th>Chain ID</th></tr>
+      <tr><td>Ethereum</td><td><code>ethereum.chainrpc.net</code></td><td>1</td></tr>
+      <tr><td>Base</td><td><code>base.chainrpc.net</code></td><td>8453</td></tr>
+      <tr><td>Arbitrum One</td><td><code>arbitrum.chainrpc.net</code></td><td>42161</td></tr>
+      <tr><td>Optimism</td><td><code>optimism.chainrpc.net</code></td><td>10</td></tr>
+      <tr><td>Polygon PoS</td><td><code>polygon.chainrpc.net</code></td><td>137</td></tr>
+      <tr><td>BNB Chain</td><td><code>bsc.chainrpc.net</code></td><td>56</td></tr>
+      <tr><td>Avalanche C-Chain</td><td><code>avalanche.chainrpc.net</code></td><td>43114</td></tr>
+      <tr><td>Gnosis</td><td><code>gnosis.chainrpc.net</code></td><td>100</td></tr>
+      <tr><td>Ethereum Sepolia</td><td><code>sepolia.chainrpc.net</code></td><td>11155111</td></tr>
+      <tr><td>Base Sepolia</td><td><code>base-sepolia.chainrpc.net</code></td><td>84532</td></tr>
+    </table>
+
+    <h2 id="auth">Authentication</h2>
+    <p>Your API key goes in the URL path. No headers needed.</p>
+    <pre><code>POST https://base.chainrpc.net/rpk_abc123def456...</code></pre>
+    <p>All standard JSON-RPC methods are supported: <code>eth_blockNumber</code>, <code>eth_call</code>, <code>eth_sendRawTransaction</code>, <code>eth_getLogs</code>, etc.</p>
+
+    <h2 id="rate-limits">Rate limits</h2>
+    <table>
+      <tr><th>Tier</th><th>Requests/day</th><th>Requests/sec</th><th>Overflow</th><th>Price</th></tr>
+      <tr><td>Free</td><td>25,000</td><td>3</td><td>Blocked (429)</td><td>$0</td></tr>
+      <tr><td>Growth</td><td>500,000</td><td>30</td><td>$10 / million</td><td>$29/mo</td></tr>
+      <tr><td>Pro</td><td>5,000,000</td><td>100</td><td>$5 / million</td><td>$99/mo</td></tr>
+    </table>
+    <p>Paid tiers are never blocked. When you exceed your included requests, overflow is charged from your approved USDC/USDT balance.</p>
+
+    <h3>Response headers</h3>
+    <pre><code>X-RateLimit-Limit: 25000
+X-RateLimit-Remaining: 18402
+X-RateLimit-Reset: 1713052800
+X-Chain: base
+X-Cache: HIT
+X-Overflow: true  <span class="comment">← only present when over included limit</span></code></pre>
+
+    <h2 id="billing">Billing</h2>
+    <p>Paid subscriptions use USDC or USDT on Base (chain ID 8453).</p>
+    <ol>
+      <li>Link your wallet address to your key</li>
+      <li>Approve our billing contract for the desired amount</li>
+      <li>We pull your subscription monthly + overflow charges</li>
+      <li>Revoke approval anytime to cancel — no forms, no emails</li>
+    </ol>
+    <p>Your USDC/USDT stays in your wallet until we pull it. You remain in full control.</p>
+
+    <h3>Cancel</h3>
+    <p>Three ways to stop paying:</p>
+    <ul>
+      <li>Revoke the approval in your wallet</li>
+      <li>Move USDC/USDT out (pull will fail)</li>
+      <li>Let the allowance run out</li>
+    </ul>
+    <p>If a pull fails, your key reverts to free tier. No penalty, no debt.</p>
+
+    <h2 id="caching">Caching</h2>
+    <p>ChainRPC caches responses for common methods. Cache hits return in &lt;2ms.</p>
+    <table>
+      <tr><th>Method</th><th>TTL</th></tr>
+      <tr><td><code>eth_chainId</code></td><td>24 hours</td></tr>
+      <tr><td><code>net_version</code></td><td>24 hours</td></tr>
+      <tr><td><code>eth_getCode</code></td><td>24 hours</td></tr>
+      <tr><td><code>eth_getTransactionReceipt</code></td><td>24 hours</td></tr>
+      <tr><td><code>eth_blockNumber</code></td><td>2 seconds</td></tr>
+      <tr><td><code>eth_gasPrice</code></td><td>5 seconds</td></tr>
+      <tr><td><code>eth_call</code></td><td>5 seconds</td></tr>
+      <tr><td><code>eth_getBalance</code></td><td>10 seconds</td></tr>
+      <tr><td><code>eth_getLogs</code></td><td>30 seconds</td></tr>
+      <tr><td><code>eth_sendRawTransaction</code></td><td>Never cached</td></tr>
+    </table>
+    <p>The <code>X-Cache: HIT</code> or <code>X-Cache: MISS</code> header indicates whether the response came from cache.</p>
+
+    <h2 id="errors">Errors</h2>
+    <table>
+      <tr><th>HTTP</th><th>Meaning</th></tr>
+      <tr><td>200</td><td>Success (check JSON-RPC <code>error</code> field for RPC-level errors)</td></tr>
+      <tr><td>400</td><td>Unknown chain (check subdomain)</td></tr>
+      <tr><td>401</td><td>Invalid API key</td></tr>
+      <tr><td>429</td><td>Rate limited (free tier) or burst limit exceeded</td></tr>
+      <tr><td>503</td><td>Upstream chain node unavailable</td></tr>
+      <tr><td>504</td><td>Upstream timeout (30s)</td></tr>
+    </table>
+
   </div>
 
-  <footer class="border-t border-gray-200 bg-gray-50">
-    <div class="max-w-4xl mx-auto px-6 py-8 text-center text-sm text-gray-500">
-      <a href="/" class="hover:text-gray-900">Home</a> &middot;
-      <a href="/terms.html" class="hover:text-gray-900">Terms</a> &middot;
-      <a href="https://github.com/opsalis/rpcaas" class="hover:text-gray-900">GitHub</a>
-    </div>
+  <footer>
+    <div>&copy; 2026 ChainRPC &middot; <a href="/terms.html" style="color:#94a3b8">Terms of Service</a></div>
   </footer>
+
+  <script>
+    function goToAccount() {
+      const key = document.getElementById('key-input').value.trim();
+      if (key && key.startsWith('rpk_')) {
+        window.location.href = '/account.html?key=' + encodeURIComponent(key);
+      }
+    }
+    document.getElementById('key-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') goToAccount();
+    });
+  </script>
 </body>
 </html>
