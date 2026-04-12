@@ -116,7 +116,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-value" id="allowance">—</div>
-            <div class="stat-label">Remaining USDC</div>
+            <div class="stat-label" id="allowance-label">Remaining</div>
           </div>
         </div>
         <div style="font-size:0.85rem; color:var(--text-secondary);">
@@ -194,7 +194,10 @@
       document.getElementById('tier').textContent = 'Growth';
       document.getElementById('status').textContent = 'Active';
       document.getElementById('rate-limit').textContent = '30/s';
+      // In production: read payment token from L2, then query allowance on Base
+      var paymentToken = 'USDC'; // or 'USDT' — from L2 subscription record
       document.getElementById('allowance').textContent = '$142.00';
+      document.getElementById('allowance-label').textContent = 'Remaining ' + paymentToken;
       document.getElementById('usage-today').textContent = '4,218';
       document.getElementById('usage-today-limit').textContent = '/ 500,000';
       document.getElementById('usage-today-limit').textContent = '/ 25,000';
