@@ -3,71 +3,462 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RPCaaS - Terms of Use</title>
+  <title>Terms of Service — ChainRPC</title>
+  <meta name="description" content="ChainRPC Terms of Service. Read the full terms governing your use of ChainRPC multi-chain RPC endpoints, billing, acceptable use, and limitations.">
+  <link rel="canonical" href="https://chainrpc.net/terms.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://chainrpc.net/terms.html">
+  <meta property="og:title" content="Terms of Service — ChainRPC">
+  <meta property="og:description" content="Terms governing use of ChainRPC multi-chain RPC endpoints.">
+  <meta property="og:site_name" content="ChainRPC">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230066ff'/%3E%3Cpath d='M8 16h4l2-4 4 8 2-4h4' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>body { font-family: 'Inter', system-ui, sans-serif; }</style>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #0066ff;
+      --blue-dim: #0052cc;
+      --blue-light: #e8f0fe;
+      --text: #1a1a2e;
+      --text-secondary: #555770;
+      --bg: #ffffff;
+      --bg-alt: #f7f8fc;
+      --border: #e4e7ec;
+      --radius: 10px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.75; -webkit-font-smoothing: antialiased; }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 0; position: sticky; top: 0; z-index: 100; }
+    nav .inner { max-width: 800px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; color: var(--text); }
+    .logo svg { width: 28px; height: 28px; }
+    .nav-links { display: flex; gap: 24px; font-size: 0.9rem; font-weight: 500; }
+    .nav-links a { color: var(--text-secondary); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    .page-header { margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+    .page-header h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+    .page-header .meta { color: var(--text-secondary); font-size: 0.9rem; }
+
+    h2 { font-size: 1.25rem; font-weight: 700; margin: 48px 0 16px; padding-top: 24px; color: var(--text); }
+    h3 { font-size: 1rem; font-weight: 600; margin: 28px 0 10px; color: var(--text); }
+    p { margin-bottom: 14px; color: var(--text-secondary); font-size: 0.95rem; }
+    ul, ol { margin-bottom: 14px; padding-left: 24px; color: var(--text-secondary); font-size: 0.95rem; }
+    li { margin-bottom: 6px; }
+    strong { color: var(--text); font-weight: 600; }
+
+    .toc { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; margin-bottom: 48px; }
+    .toc h2 { margin-top: 0; padding-top: 0; font-size: 1rem; border-bottom: none; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 16px; }
+    .toc ol { margin-bottom: 0; }
+    .toc li { margin-bottom: 4px; font-size: 0.875rem; }
+    .toc a { color: var(--text-secondary); }
+    .toc a:hover { color: var(--blue); text-decoration: none; }
+
+    .notice { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px 20px; margin: 20px 0; font-size: 0.9rem; color: #92400e; }
+
+    footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; font-size: 0.8rem; color: #94a3b8; }
+    footer a { color: #94a3b8; }
+    footer a:hover { color: var(--text-secondary); }
+
+    @media (max-width: 600px) {
+      .page-header h1 { font-size: 1.75rem; }
+    }
+  </style>
 </head>
-<body class="bg-white text-gray-900 antialiased">
-  <nav class="border-b border-gray-200 bg-white sticky top-0 z-50">
-    <div class="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="/" class="text-xl font-bold tracking-tight">
-        <span class="text-indigo-500">RPC</span><span class="text-gray-900">aaS</span>
+<body>
+
+  <nav>
+    <div class="inner">
+      <a href="/" class="logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="6" fill="#0066ff"/>
+          <path d="M8 16h4l2-4 4 8 2-4h4" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Chain<span style="color:var(--blue)">RPC</span></span>
       </a>
-      <div class="flex items-center gap-6 text-sm font-medium text-gray-600">
-        <a href="/" class="hover:text-gray-900">Home</a>
-        <a href="/docs.html" class="hover:text-gray-900">Docs</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/account.html">Account</a>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-3xl mx-auto px-6 py-16 prose prose-gray">
-    <h1 class="text-3xl font-bold mb-2">Terms of Use</h1>
-    <p class="text-gray-500 text-sm mb-8">Last updated: April 2026</p>
+  <div class="container">
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">1. Service Description</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">RPCaaS provides multi-chain JSON-RPC endpoint access for blockchain networks including Base, Optimism, Arbitrum, Polygon, and Ethereum. The service proxies standard JSON-RPC requests to blockchain full nodes operated by us.</p>
+    <div class="page-header">
+      <h1>Terms of Service</h1>
+      <div class="meta">Last updated: April 12, 2026 &nbsp;&middot;&nbsp; Effective immediately upon use of the Service</div>
+    </div>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">2. API Keys</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">API keys are issued for individual use. You are responsible for keeping your API key confidential. Do not share your API key or embed it in client-side code. We reserve the right to revoke API keys that violate these terms or are used in a manner that degrades service for other users.</p>
+    <div class="notice">
+      <strong>Important:</strong> Please read these Terms of Service carefully before using ChainRPC. By accessing or using the Service, you agree to be bound by all terms below. If you do not agree, do not use the Service.
+    </div>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">3. Rate Limits</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">Each tier has defined rate limits (requests per second, per day, and per month). Exceeding these limits results in HTTP 429 responses. Persistent abuse of rate limits may result in key revocation.</p>
+    <div class="toc">
+      <h2>Table of Contents</h2>
+      <ol>
+        <li><a href="#s1">Service Description</a></li>
+        <li><a href="#s2">Acceptance of Terms</a></li>
+        <li><a href="#s3">API Keys and Account Access</a></li>
+        <li><a href="#s4">Service Tiers and Rate Limits</a></li>
+        <li><a href="#s5">Payment, Billing, and Receipts</a></li>
+        <li><a href="#s6">No Refunds</a></li>
+        <li><a href="#s7">USDC and USDT Payments</a></li>
+        <li><a href="#s8">Subscription and Cancellation</a></li>
+        <li><a href="#s9">Service Availability and Uptime</a></li>
+        <li><a href="#s10">Not Suitable for Critical Systems</a></li>
+        <li><a href="#s11">Acceptable Use Policy</a></li>
+        <li><a href="#s12">Prohibited Activities</a></li>
+        <li><a href="#s13">Intellectual Property</a></li>
+        <li><a href="#s14">Privacy and Data</a></li>
+        <li><a href="#s15">Disclaimer of Warranties</a></li>
+        <li><a href="#s16">Limitation of Liability</a></li>
+        <li><a href="#s17">Indemnification</a></li>
+        <li><a href="#s18">Service Termination and Suspension</a></li>
+        <li><a href="#s19">Changes to the Service</a></li>
+        <li><a href="#s20">Changes to These Terms</a></li>
+        <li><a href="#s21">Governing Law and Jurisdiction</a></li>
+        <li><a href="#s22">Binding Arbitration</a></li>
+        <li><a href="#s23">Class Action Waiver</a></li>
+        <li><a href="#s24">Severability</a></li>
+        <li><a href="#s25">Entire Agreement</a></li>
+        <li><a href="#s26">Contact and Operator Information</a></li>
+      </ol>
+    </div>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">4. Payment</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">Paid tiers are billed monthly in USDC. Payments are non-refundable. If payment is not received by the due date, your API key will be downgraded to the free tier. We do not store credit card information; all payments are processed via USDC transfers on-chain.</p>
+    <!-- 1 -->
+    <h2 id="s1">1. Service Description</h2>
+    <p>ChainRPC ("the Service," "ChainRPC," "we," "us," or "our") provides multi-chain JSON-RPC endpoint access for blockchain networks. The Service proxies standard Ethereum-compatible JSON-RPC requests to blockchain full nodes operated by or on behalf of ChainRPC.</p>
+    <p>The Service is designed for software developers, system integrators, and technical operators who require reliable, low-latency access to blockchain network data for the purpose of building, testing, and operating decentralized applications, infrastructure tooling, monitoring systems, and similar technical projects.</p>
+    <p>Supported networks include, but are not limited to: Ethereum, Base, Arbitrum One, Optimism, Polygon PoS, BNB Chain, Avalanche, Gnosis, zkSync Era, Linea, Scroll, Blast, Mantle, Polygon zkEVM, Mode, Zora, Celo, Ethereum Sepolia, and Base Sepolia. The list of supported networks may change at any time without notice.</p>
+    <p>The Service operates on a best-effort basis. It is not a financial service, payment processor, custodian, or exchange. ChainRPC does not transmit, hold, or settle funds on behalf of any user.</p>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">5. Service Level</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">We provide the service on a best-effort basis. We do not guarantee 100% uptime. Blockchain nodes may fall out of sync, require maintenance, or experience temporary outages. We are not liable for any losses resulting from service unavailability.</p>
+    <!-- 2 -->
+    <h2 id="s2">2. Acceptance of Terms</h2>
+    <p>By generating an API key, by sending any request to any ChainRPC endpoint, by accessing the ChainRPC website, or by paying for any tier of the Service, you ("User," "you," or "your") agree to be legally bound by these Terms of Service.</p>
+    <p>If you are accepting these terms on behalf of a company, organization, or other legal entity, you represent and warrant that you have the authority to bind that entity to these terms. In such case, "you" refers to that entity.</p>
+    <p>If you are under 18 years of age, you represent that your legal guardian has reviewed and agreed to these terms on your behalf. Users who are under 13 years of age may not use the Service.</p>
+    <p>Use of the Service constitutes ongoing acceptance of the then-current version of these terms. It is your responsibility to review these terms periodically.</p>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">6. Acceptable Use</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">You may not use the service to:</p>
-    <ul class="list-disc pl-6 text-gray-700 mb-4 space-y-1">
-      <li>Conduct denial-of-service attacks against our infrastructure or any third party</li>
-      <li>Resell or redistribute API access without authorization</li>
-      <li>Attempt to circumvent rate limits or authentication</li>
-      <li>Use the service for any illegal purpose</li>
+    <!-- 3 -->
+    <h2 id="s3">3. API Keys and Account Access</h2>
+
+    <h3>3.1 Key Generation</h3>
+    <p>Access to the Service is granted through an API key ("API key" or "key") generated on the ChainRPC website. Keys are issued in the format <code>rpk_</code> followed by a hexadecimal string. Free-tier keys may be generated without registration, email address, or personal identification.</p>
+
+    <h3>3.2 Your Responsibility to Save Your Key</h3>
+    <p><strong>You are solely responsible for saving and safeguarding your API key.</strong> ChainRPC does not store your full API key in a retrievable form. If you lose your API key, you will permanently lose access to the associated account, usage history, and any linked wallet configuration. ChainRPC cannot recover a lost key, cannot reset a lost key, and will not provide access to any account associated with a lost key under any circumstances.</p>
+    <p>Save your key immediately upon generation. Store it in a secure location — a password manager, encrypted note, or equivalent. Do not rely solely on browser history, screenshot, or memory.</p>
+
+    <h3>3.3 Key Confidentiality</h3>
+    <p>Your API key is a shared secret. You must keep it confidential. Do not embed your API key in client-side JavaScript, mobile app binaries, or publicly accessible source code repositories. If your key is disclosed, revoke it immediately via your account page and generate a new one.</p>
+
+    <h3>3.4 Key Revocation and Regeneration</h3>
+    <p>You may regenerate your API key at any time from your account page. Regeneration immediately invalidates the prior key. Your tier, wallet linkage, and any approved USDC/USDT balance transfer to the new key.</p>
+    <p>ChainRPC reserves the right to revoke any API key at any time, with or without notice, for any violation of these terms or for any behavior that in our sole judgment threatens the integrity, security, or availability of the Service.</p>
+
+    <h3>3.5 One Account per Key</h3>
+    <p>Each API key represents one account. You may hold multiple keys. Each key accrues usage and billing independently. Keys are not transferable to third parties.</p>
+
+    <!-- 4 -->
+    <h2 id="s4">4. Service Tiers and Rate Limits</h2>
+
+    <h3>4.1 Free Tier</h3>
+    <p>The Free tier provides 25,000 requests per day across all supported chains, with a rate limit of 3 requests per second. The Free tier is subject to a hard daily limit — requests exceeding the daily quota receive an HTTP 429 response until the quota resets at midnight UTC. The Free tier is provided as-is and may be modified or discontinued at any time.</p>
+
+    <h3>4.2 Growth Tier</h3>
+    <p>The Growth tier provides 500,000 requests per day, with a rate limit of 30 requests per second, plus overflow at $10.00 USD per additional 1,000,000 requests. Overflow is charged from the user's approved USDC or USDT balance as it accrues.</p>
+
+    <h3>4.3 Pro Tier</h3>
+    <p>The Pro tier provides 5,000,000 requests per day, with a rate limit of 100 requests per second, plus overflow at $5.00 USD per additional 1,000,000 requests. Overflow is charged from the user's approved USDC or USDT balance as it accrues.</p>
+
+    <h3>4.4 Changes to Tiers</h3>
+    <p>ChainRPC reserves the right to modify the limits, prices, features, and availability of any tier at any time. Existing paid users will receive at least 14 days' notice before any price increase takes effect. Tier changes that reduce included quota without a corresponding price reduction will be subject to the same 14-day notice.</p>
+
+    <h3>4.5 Rate Limit Enforcement</h3>
+    <p>All tiers are subject to per-second burst limits. Exceeding the per-second limit will result in HTTP 429 responses regardless of remaining daily quota. Persistent burst abuse may result in temporary IP-level throttling or key suspension.</p>
+
+    <!-- 5 -->
+    <h2 id="s5">5. Payment, Billing, and Receipts</h2>
+
+    <h3>5.1 Payment Method</h3>
+    <p>Paid tiers are billed in USDC (USD Coin) or USDT (Tether USD) on the Base network (chain ID 8453). No other payment methods are accepted. ChainRPC does not accept credit cards, bank transfers, checks, cash, or any other form of payment.</p>
+
+    <h3>5.2 Wallet Linkage</h3>
+    <p>To upgrade to a paid tier, you must link an Ethereum-compatible wallet address to your API key via your account page. You must then approve ChainRPC's billing contract to pull from your USDC or USDT balance. The approval amount represents your maximum authorized spend. ChainRPC will never pull more than the approved allowance.</p>
+
+    <h3>5.3 Billing Mechanism</h3>
+    <p>ChainRPC operates on a pull-based billing model. Your USDC or USDT remains in your wallet at all times. ChainRPC pulls the monthly subscription fee at the start of each billing cycle and pulls overflow charges as they are incurred. You retain full custody of your funds until a pull occurs. You may reduce or revoke the approval at any time via your wallet to prevent future pulls.</p>
+
+    <h3>5.4 Receipts</h3>
+    <p>All payments are settled on-chain. Every pull generates an on-chain transaction that serves as your receipt. You may retrieve transaction records at any time from your account page or directly from the Base network block explorer. ChainRPC does not issue paper invoices, PDF invoices, or email receipts. <strong>The on-chain transaction is your receipt.</strong></p>
+
+    <h3>5.5 Billing Failures</h3>
+    <p>If a billing pull fails — due to insufficient USDC/USDT balance, revoked approval, or any other reason — your key will be downgraded to the Free tier at the start of the next billing cycle. No debt is carried. No collection action will be taken. No penalty fee will be applied. You may re-upgrade at any time.</p>
+
+    <h3>5.6 Overflow Billing</h3>
+    <p>Overflow charges are calculated per million requests beyond your tier's daily included limit and pulled from your approved balance. If your balance is insufficient to cover an overflow charge, overflow billing stops and requests above the included limit receive HTTP 429 responses until the balance is replenished or the daily quota resets.</p>
+
+    <!-- 6 -->
+    <h2 id="s6">6. No Refunds</h2>
+    <p><strong>All payments are final and non-refundable.</strong> This applies without exception to:</p>
+    <ul>
+      <li>Monthly subscription fees already pulled</li>
+      <li>Overflow charges already pulled</li>
+      <li>Any partial-period subscription fees</li>
+      <li>Fees incurred during periods of service unavailability, degradation, or outage</li>
+      <li>Fees incurred on requests that returned errors</li>
+      <li>Fees incurred due to misconfiguration, testing, or duplicate requests</li>
+    </ul>
+    <p>If you believe a charge was made in error or without authorization, you must notify us within 30 days of the transaction. Claims submitted after 30 days will not be reviewed. Resolution of disputes is at our sole discretion.</p>
+
+    <!-- 7 -->
+    <h2 id="s7">7. USDC and USDT Payments</h2>
+
+    <h3>7.1 Stablecoin Risk</h3>
+    <p>USDC and USDT are digital stablecoins pegged to the US dollar. ChainRPC makes no representation regarding the stability, liquidity, or value of USDC or USDT. You accept all risks associated with holding and transferring stablecoins, including depegging events, smart contract failures, and regulatory actions.</p>
+
+    <h3>7.2 Network Fees</h3>
+    <p>All on-chain transactions incur network gas fees on the Base network. These fees are paid by you (the User) from your wallet's ETH balance and are not charged by ChainRPC. ChainRPC is not responsible for gas costs.</p>
+
+    <h3>7.3 Irreversibility</h3>
+    <p>Blockchain transactions are irreversible. Once a payment has been pulled and confirmed on-chain, it cannot be reversed, chargeback, or recalled by any party. By approving ChainRPC's billing contract, you acknowledge and accept this irreversibility.</p>
+
+    <h3>7.4 Contract Approval</h3>
+    <p>The ERC-20 approval you grant to ChainRPC's billing contract authorizes us to pull up to the approved amount. You may reduce or revoke this approval at any time using any compatible wallet interface. Revoking approval does not constitute cancellation of any outstanding obligation; however, ChainRPC will not pull funds from a revoked approval.</p>
+
+    <!-- 8 -->
+    <h2 id="s8">8. Subscription and Cancellation</h2>
+
+    <h3>8.1 Subscription Term</h3>
+    <p>Paid subscriptions run on a monthly billing cycle from the date of first payment. Each month, ChainRPC attempts to pull the subscription fee on or after the billing date.</p>
+
+    <h3>8.2 How to Cancel</h3>
+    <p>There is no cancellation form, cancellation email, or cancellation procedure. To stop paying, simply revoke or reduce the USDC/USDT approval from your wallet, or move your USDC/USDT balance below the subscription amount. A failed pull results in automatic downgrade to the Free tier. Your key remains active on the Free tier indefinitely.</p>
+
+    <h3>8.3 No Prorated Refunds on Cancellation</h3>
+    <p>If you cancel mid-cycle (by revoking approval after a pull has already occurred), no prorated refund will be issued for the remaining days of the cycle. Your paid tier access continues until the end of the cycle, at which point the key downgrades to Free if no pull succeeds.</p>
+
+    <h3>8.4 Reactivation</h3>
+    <p>You may reactivate a paid tier at any time by re-linking your wallet and re-approving the billing contract. Previous usage history is retained.</p>
+
+    <!-- 9 -->
+    <h2 id="s9">9. Service Availability and Uptime</h2>
+
+    <h3>9.1 No Uptime Guarantee</h3>
+    <p><strong>ChainRPC does not guarantee any specific level of uptime, availability, or response time.</strong> The Service is provided on a best-effort basis. We target high availability but make no contractual commitments to any uptime percentage, including the figures referenced in our marketing materials, which are historical observations and not guarantees.</p>
+
+    <h3>9.2 Scheduled and Unscheduled Maintenance</h3>
+    <p>ChainRPC may perform maintenance, upgrades, or emergency repairs at any time with or without notice. During maintenance windows, the Service or individual chains may be unavailable. ChainRPC will make reasonable efforts to minimize downtime but is not liable for any losses incurred during maintenance periods.</p>
+
+    <h3>9.3 Upstream Dependencies</h3>
+    <p>The Service depends on blockchain full nodes, third-party infrastructure providers, and underlying network protocols. ChainRPC is not responsible for outages, degradation, or errors caused by:</p>
+    <ul>
+      <li>Blockchain network congestion, forks, or protocol upgrades</li>
+      <li>Third-party full node operators</li>
+      <li>Internet infrastructure failures, CDN outages, or DNS disruptions</li>
+      <li>Force majeure events including natural disasters, war, or government action</li>
     </ul>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">7. Data and Privacy</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">We do not collect personal information. API keys are anonymous. We log request counts for metering purposes. We do not log the content of your JSON-RPC requests. We do not sell or share any data with third parties.</p>
+    <h3>9.4 Chain Removals</h3>
+    <p>ChainRPC may remove support for any blockchain network at any time. We will make reasonable efforts to provide 30 days' advance notice for planned chain removals, but reserve the right to remove a chain immediately if required for security, legal, or operational reasons.</p>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">8. Limitation of Liability</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">The service is provided "as is" without warranty of any kind. In no event shall we be liable for any indirect, incidental, special, or consequential damages arising out of the use or inability to use the service. Our total liability is limited to the amount you have paid us in the preceding 12 months.</p>
+    <!-- 10 -->
+    <h2 id="s10">10. Not Suitable for Critical Systems</h2>
+    <p><strong>ChainRPC is not designed or intended for use in critical infrastructure, life-safety systems, medical devices, nuclear facilities, aviation control systems, financial trading systems, automated market makers operating without human oversight, or any application where a service interruption could result in death, personal injury, physical damage, significant financial loss, or legal liability.</strong></p>
+    <p>You acknowledge that the Service may be unavailable without notice and you assume all risk associated with relying on the Service for any purpose. You are responsible for implementing appropriate redundancy, failover, and error handling in your own systems.</p>
+    <p>ChainRPC strongly recommends that production applications maintain fallback RPC endpoints and implement circuit-breaker logic so that a ChainRPC outage does not cause a cascading failure in your application.</p>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">9. Changes</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">We may modify these terms at any time. Continued use of the service after changes constitutes acceptance of the new terms. Material changes will be communicated through the website.</p>
+    <!-- 11 -->
+    <h2 id="s11">11. Acceptable Use Policy</h2>
 
-    <h2 class="text-xl font-semibold mt-8 mb-3">10. Governing Law</h2>
-    <p class="text-gray-700 leading-relaxed mb-4">These terms are governed by the laws of the State of Wyoming, United States.</p>
+    <h3>11.1 Permitted Uses</h3>
+    <p>The Service may be used for any lawful purpose consistent with these terms, including:</p>
+    <ul>
+      <li>Building, testing, and operating blockchain applications and decentralized applications (dApps)</li>
+      <li>Reading blockchain state data for analytics, monitoring, or research</li>
+      <li>Submitting signed transactions to blockchain networks</li>
+      <li>Integrating blockchain data into other software systems</li>
+      <li>Educational and research purposes</li>
+    </ul>
+
+    <h3>11.2 Responsibility for Your Use</h3>
+    <p>You are solely responsible for all requests sent through your API key, all transactions submitted through your API key, and all consequences thereof. ChainRPC acts as a transparent network proxy. We do not screen, validate, or take any responsibility for the content or consequences of your JSON-RPC requests.</p>
+
+    <!-- 12 -->
+    <h2 id="s12">12. Prohibited Activities</h2>
+    <p>You may not use the Service to:</p>
+    <ul>
+      <li><strong>Conduct denial-of-service attacks</strong> — including sending intentional floods of requests for the purpose of degrading service to ChainRPC or any blockchain network</li>
+      <li><strong>Circumvent rate limits</strong> — including using multiple keys, IP rotation, or automated key generation to exceed permitted request quotas</li>
+      <li><strong>Resell or sublicense access</strong> — you may not sell, resell, sublicense, time-share, or otherwise provide third parties with access to your API key as a service without express written permission from ChainRPC</li>
+      <li><strong>Conduct illegal activities</strong> — including money laundering, sanctions violations, market manipulation, fraud, or submitting transactions that violate applicable law in your jurisdiction</li>
+      <li><strong>Reverse engineer the Service</strong> — you may not attempt to discover the underlying implementation, infrastructure topology, or business logic of ChainRPC through analysis of network traffic, timing attacks, or other means</li>
+      <li><strong>Attempt to gain unauthorized access</strong> — including probing for vulnerabilities, fuzzing, credential stuffing, or any other attempt to access systems or data beyond your API key's authorized scope</li>
+      <li><strong>Interfere with other users</strong> — including attempts to affect the quality of service received by other API key holders</li>
+      <li><strong>Create fictitious identity or misrepresentation</strong> — including impersonating ChainRPC or any other entity</li>
+      <li><strong>Transmit malware or harmful code</strong> — you may not use the Service as a vector to deliver or execute malicious code on any system</li>
+      <li><strong>Violate blockchain network rules</strong> — you may not use the Service to submit transactions that violate the consensus rules of any supported blockchain in a manner intended to cause harm or exploit other users</li>
+    </ul>
+    <p>Violation of this section is grounds for immediate key revocation and termination of access without refund.</p>
+
+    <!-- 13 -->
+    <h2 id="s13">13. Intellectual Property</h2>
+
+    <h3>13.1 ChainRPC Property</h3>
+    <p>The ChainRPC name, logo, website, documentation, software, infrastructure, and all related intellectual property are owned by or licensed to ChainRPC. Nothing in these terms grants you any ownership or license in ChainRPC's intellectual property except the limited right to use the Service as described herein.</p>
+
+    <h3>13.2 Your Content</h3>
+    <p>You retain ownership of any data, application code, or content you create using the Service. ChainRPC claims no ownership over your applications, smart contracts, or data.</p>
+
+    <h3>13.3 Open Standards</h3>
+    <p>The Ethereum JSON-RPC protocol and related open standards are not owned by ChainRPC. Your right to implement and use those standards is governed by their respective communities and specifications, not by these terms.</p>
+
+    <!-- 14 -->
+    <h2 id="s14">14. Privacy and Data</h2>
+
+    <h3>14.1 No Personal Information Required</h3>
+    <p>ChainRPC does not require you to provide any personal information to use the Free tier. No name, email address, phone number, or government ID is collected. Your API key is anonymous.</p>
+
+    <h3>14.2 Wallet Addresses</h3>
+    <p>If you link a wallet to your API key to access a paid tier, your wallet address is associated with your key in our systems. Wallet addresses on public blockchains are inherently public. ChainRPC does not take responsibility for any privacy implications arising from on-chain payment transactions.</p>
+
+    <h3>14.3 Request Logging</h3>
+    <p>ChainRPC logs request counts, timestamps, and error codes for the purpose of rate limiting, billing, and service monitoring. We do not log the full content of your JSON-RPC requests or responses. Request logs are retained for up to 90 days and then deleted.</p>
+
+    <h3>14.4 No Sale of Data</h3>
+    <p>ChainRPC does not sell, rent, or share any user data with third parties for marketing or commercial purposes.</p>
+
+    <h3>14.5 Aggregate Analytics</h3>
+    <p>ChainRPC may use aggregated, anonymized usage data (such as total request volume by chain or method type) for internal analytics, product development, and public reporting. Aggregated data cannot be traced to individual keys or users.</p>
+
+    <!-- 15 -->
+    <h2 id="s15">15. Disclaimer of Warranties</h2>
+    <p><strong>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CHAINRPC EXPRESSLY DISCLAIMS ALL WARRANTIES INCLUDING BUT NOT LIMITED TO:</strong></p>
+    <ul>
+      <li>Warranties of merchantability, fitness for a particular purpose, and non-infringement</li>
+      <li>Warranties that the Service will be uninterrupted, error-free, or free of harmful components</li>
+      <li>Warranties regarding the accuracy, completeness, timeliness, or reliability of data provided through the Service</li>
+      <li>Warranties that defects will be corrected</li>
+      <li>Warranties that the Service is compatible with your software, hardware, or infrastructure</li>
+    </ul>
+    <p>You assume the entire risk of using the Service. Some jurisdictions do not allow the exclusion of certain warranties. In such jurisdictions, the above exclusions apply to the fullest extent permitted by law.</p>
+
+    <!-- 16 -->
+    <h2 id="s16">16. Limitation of Liability</h2>
+    <p><strong>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, CHAINRPC'S TOTAL CUMULATIVE LIABILITY TO YOU FOR ANY AND ALL CLAIMS ARISING OUT OF OR RELATED TO THE SERVICE OR THESE TERMS — WHETHER BASED ON CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, OR ANY OTHER LEGAL THEORY — SHALL NOT EXCEED ONE DOLLAR ($1.00 USD).</strong></p>
+    <p>ChainRPC shall not be liable for any:</p>
+    <ul>
+      <li>Indirect, incidental, special, punitive, or consequential damages</li>
+      <li>Loss of profits, revenue, business, data, or goodwill</li>
+      <li>Cost of substitute services</li>
+      <li>Losses arising from blockchain network failures, node sync issues, or protocol changes</li>
+      <li>Losses arising from unauthorized access to your API key</li>
+      <li>Losses arising from stablecoin depegging or smart contract failures</li>
+      <li>Losses arising from your inability to recover a lost API key</li>
+      <li>Losses arising from service unavailability during maintenance or outages</li>
+    </ul>
+    <p>These limitations apply even if ChainRPC has been advised of the possibility of such damages and even if any limited remedy fails its essential purpose. The above limitations are a fundamental basis of the bargain between you and ChainRPC.</p>
+    <p>Some jurisdictions do not allow the limitation of liability for certain types of damages. In such jurisdictions, liability is limited to the greatest extent permitted by law.</p>
+
+    <!-- 17 -->
+    <h2 id="s17">17. Indemnification</h2>
+    <p>You agree to indemnify, defend, and hold harmless ChainRPC and its affiliates, officers, agents, and successors from and against any claims, liabilities, damages, losses, and expenses (including reasonable legal fees) arising out of or related to:</p>
+    <ul>
+      <li>Your use of the Service in violation of these terms</li>
+      <li>Your violation of any applicable law or regulation</li>
+      <li>Your violation of any third party's rights</li>
+      <li>Any transaction you submit through the Service</li>
+      <li>Your negligence or willful misconduct</li>
+      <li>Unauthorized use of your API key by any third party where such unauthorized use arose from your failure to secure the key</li>
+    </ul>
+    <p>ChainRPC reserves the right to assume exclusive defense and control of any matter subject to indemnification by you, at your expense. You agree to cooperate with ChainRPC's defense of such claims.</p>
+
+    <!-- 18 -->
+    <h2 id="s18">18. Service Termination and Suspension</h2>
+
+    <h3>18.1 Termination by ChainRPC</h3>
+    <p>ChainRPC may suspend, throttle, or terminate your access to the Service at any time, with or without notice, for any reason or no reason. Reasons may include but are not limited to: violation of these terms, suspicious activity, unpaid obligations, legal requirements, or discontinuation of the Service.</p>
+
+    <h3>18.2 Effect of Termination</h3>
+    <p>Upon termination, your API key becomes invalid. All pending or future billing pulls are cancelled. No refund is issued for any fees already paid. Your usage history may be deleted. Provisions of these terms that by their nature should survive termination (including limitation of liability, indemnification, arbitration, and governing law) will continue to apply.</p>
+
+    <h3>18.3 Discontinuation of the Service</h3>
+    <p>ChainRPC may discontinue the Service entirely at any time. If the Service is discontinued, ChainRPC will make reasonable efforts to provide 30 days' advance notice via the website. No compensation will be owed for any unused portion of a paid subscription period following discontinuation.</p>
+
+    <h3>18.4 Termination by You</h3>
+    <p>You may terminate your use of the Service at any time by ceasing to use your API key and revoking any USDC/USDT approvals. No formal termination notice is required.</p>
+
+    <!-- 19 -->
+    <h2 id="s19">19. Changes to the Service</h2>
+    <p>ChainRPC reserves the right to modify, add, or remove features of the Service at any time without notice. This includes changes to supported chains, endpoint formats, caching behavior, response headers, rate limit enforcement, billing mechanisms, and any other aspect of the Service. Your continued use of the Service following any change constitutes acceptance of that change.</p>
+
+    <!-- 20 -->
+    <h2 id="s20">20. Changes to These Terms</h2>
+    <p>ChainRPC may update these Terms of Service at any time. The "Last updated" date at the top of this page will be revised accordingly. For material changes, we will post a notice on the ChainRPC homepage. Continued use of the Service after the effective date of revised terms constitutes acceptance of the revised terms. If you do not agree to the revised terms, stop using the Service.</p>
+
+    <!-- 21 -->
+    <h2 id="s21">21. Governing Law and Jurisdiction</h2>
+    <p>These Terms of Service are governed by and construed in accordance with the laws of the State of Wyoming, United States of America, without regard to its conflict-of-law provisions. The United Nations Convention on Contracts for the International Sale of Goods does not apply.</p>
+    <p>To the extent any dispute is not subject to arbitration under Section 22, you consent to exclusive jurisdiction and venue in the state and federal courts located in Sheridan County, Wyoming.</p>
+
+    <!-- 22 -->
+    <h2 id="s22">22. Binding Arbitration</h2>
+
+    <h3>22.1 Agreement to Arbitrate</h3>
+    <p><strong>PLEASE READ THIS SECTION CAREFULLY. IT AFFECTS YOUR LEGAL RIGHTS.</strong></p>
+    <p>Except as provided below, you and ChainRPC agree that any dispute, controversy, or claim arising out of or relating to these Terms of Service, the Service, or your use of the Service — including disputes about formation, interpretation, breach, or termination of these terms — shall be resolved by binding individual arbitration rather than in court.</p>
+
+    <h3>22.2 Arbitration Rules</h3>
+    <p>Arbitration shall be conducted by a single arbitrator under the American Arbitration Association (AAA) Consumer Arbitration Rules, or such other rules as the parties mutually agree. The seat of arbitration shall be Sheridan County, Wyoming. The arbitration shall be conducted in the English language.</p>
+
+    <h3>22.3 Arbitration Fees</h3>
+    <p>The allocation of arbitration fees shall be governed by the applicable AAA rules. If you are an individual consumer, ChainRPC will pay AAA filing fees for any claim up to $10,000 in value, unless the arbitrator determines your claim to be frivolous.</p>
+
+    <h3>22.4 Exceptions</h3>
+    <p>Either party may bring an individual action in small claims court if the dispute qualifies. Either party may seek emergency injunctive relief from a court of competent jurisdiction to prevent irreparable harm pending arbitration.</p>
+
+    <h3>22.5 Waiver of Jury Trial</h3>
+    <p>BY AGREEING TO ARBITRATION, YOU WAIVE YOUR RIGHT TO A JURY TRIAL.</p>
+
+    <!-- 23 -->
+    <h2 id="s23">23. Class Action Waiver</h2>
+    <p><strong>YOU AND CHAINRPC AGREE THAT EACH PARTY MAY BRING CLAIMS AGAINST THE OTHER ONLY IN AN INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED CLASS, COLLECTIVE, CONSOLIDATED, REPRESENTATIVE, OR MULTI-PLAINTIFF ACTION.</strong></p>
+    <p>The arbitrator may not consolidate more than one person's claims and may not preside over any form of a class or representative proceeding. If this class action waiver is found unenforceable, the entire arbitration agreement in Section 22 shall be void and any disputes shall be resolved in court under Section 21.</p>
+
+    <!-- 24 -->
+    <h2 id="s24">24. Severability</h2>
+    <p>If any provision of these Terms of Service is held to be invalid, illegal, or unenforceable by a court or arbitrator of competent jurisdiction, that provision shall be modified to the minimum extent necessary to make it enforceable, or severed if modification is not possible. The remaining provisions of these terms shall remain in full force and effect. A finding that any particular provision is unenforceable shall not affect the enforceability of any other provision.</p>
+
+    <!-- 25 -->
+    <h2 id="s25">25. Entire Agreement</h2>
+    <p>These Terms of Service, together with any policies, guidelines, or notices published on the ChainRPC website, constitute the entire agreement between you and ChainRPC with respect to the Service and supersede all prior and contemporaneous negotiations, representations, agreements, and understandings — whether written or oral — relating to the Service.</p>
+    <p>No waiver by either party of any breach or default hereunder shall be deemed a waiver of any subsequent breach or default. No amendment to these terms is effective unless made in writing and published at this URL.</p>
+
+    <!-- 26 -->
+    <h2 id="s26">26. Contact and Operator Information</h2>
+    <p>ChainRPC is operated by:</p>
+    <p style="padding-left:16px; border-left:3px solid var(--border); color:var(--text-secondary);">
+      Mesa Operations LLC<br>
+      30 N Gould St Ste R<br>
+      Sheridan, WY 82801<br>
+      United States of America
+    </p>
+    <p>For questions about these terms, disputes, or legal notices, contact us via the ChainRPC website. Legal notices must be submitted in writing.</p>
+    <p>For technical support or billing questions, use your account page at <a href="/account.html">chainrpc.net/account.html</a>.</p>
+
   </div>
 
-  <footer class="border-t border-gray-200 bg-gray-50">
-    <div class="max-w-3xl mx-auto px-6 py-8 text-center text-sm text-gray-500">
-      <a href="/" class="hover:text-gray-900">Home</a> &middot;
-      <a href="/docs.html" class="hover:text-gray-900">Docs</a>
-    </div>
+  <footer>
+    &copy; 2026 ChainRPC &middot; <a href="/">Home</a> &middot; <a href="/docs.html">Docs</a> &middot; <a href="/account.html">Account</a>
   </footer>
+
 </body>
 </html>
