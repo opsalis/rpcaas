@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChainRPC — Reliable Multi-Chain RPC Infrastructure</title>
-  <meta name="description" content="Multi-chain JSON-RPC endpoints for production applications. 13 blockchains, sub-5ms cache hits, automatic failover. Free tier available.">
+  <meta name="description" content="Multi-chain JSON-RPC endpoints for production applications. 19 blockchains, sub-5ms cache hits, automatic failover. Free tier available.">
   <meta name="keywords" content="RPC endpoint, blockchain API, Base RPC, Ethereum RPC, JSON-RPC, multi-chain, web3 infrastructure">
   <link rel="canonical" href="https://chainrpc.net/">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f1729'/%3E%3Cpath d='M8 16h4l2-4 4 8 2-4h4' stroke='%2338bdf8' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://chainrpc.net/">
   <meta property="og:title" content="ChainRPC — Reliable Multi-Chain RPC Infrastructure">
-  <meta property="og:description" content="13 blockchains, sub-5ms cache hits, automatic failover. Built for production.">
+  <meta property="og:description" content="19 blockchains, sub-5ms cache hits, automatic failover. Built for production.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -49,7 +49,7 @@
     .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
 
     /* Hero */
-    .hero { padding: 100px 0 80px; text-align: center; position: relative; overflow: hidden; }
+    .hero { padding: 80px 0 24px; text-align: center; position: relative; overflow: hidden; }
     .hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 50%, var(--blue-glow) 0%, transparent 50%); pointer-events: none; }
     .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; position: relative; color: var(--text); }
     .hero h1 .accent { color: var(--blue); }
@@ -63,7 +63,7 @@
     .copy-btn:hover { background: rgba(148, 163, 184, 0.2); color: #e2e8f0; }
 
     /* Stats bar */
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 60px 0; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 24px 0 60px; }
     .stat { background: var(--bg); padding: 24px; text-align: center; }
     .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--text); }
     .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -141,26 +141,26 @@
       <div class="nav-links">
         <a href="#chains">Chains</a>
         <a href="#pricing">Pricing</a>
-        <a href="#keygen-box">Get Started</a>
+        <a href="#top">Get Started</a>
         <a href="/docs.html">Docs</a>
         <a href="/account.html">Account</a>
         <a href="/terms.html">Terms</a>
       </div>
-      <a href="#keygen-box" class="btn btn-primary">Get Free Key</a>
+      <a href="#top" class="btn btn-primary">Get Free Key</a>
     </div>
   </nav>
 
   <main>
     <!-- Hero -->
-    <section class="hero">
+    <section class="hero" id="top">
       <div class="container">
-        <h1>Production RPC<br>for <span class="accent">13 blockchains</span></h1>
+        <h1>Production RPC<br>for <span class="accent">19 blockchains</span></h1>
         <p>Standard JSON-RPC endpoints with automatic failover and zero configuration. Compatible with ethers.js, viem, web3.js, MetaMask, Hardhat, and Foundry.</p>
 
         <!-- Key generator — primary action, right in the hero -->
         <div id="keygen-box" style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: 14px; padding: 32px; max-width: 540px; margin: 36px auto 0;">
           <div style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">Try us now, free</div>
-          <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">25,000 requests/day. No email, no sign-up.</div>
+          <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">25,000 requests/day across all chains. No email, no sign-up.</div>
           <button class="btn btn-primary" id="gen-btn" onclick="generateKey()" style="width: 100%; padding: 14px; font-size: 1rem;">Generate my free API key</button>
           <div id="key-display" style="display:none; background: #1e293b; border-radius: 8px; padding: 16px; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: #38bdf8; word-break: break-all; text-align: center;"></div>
           <div id="key-warning" style="display:none; color: #d97706; font-size: 0.85rem; margin-top: 10px; font-weight: 500; text-align: center;">Save this key now. It will not be shown again.</div>
@@ -179,7 +179,7 @@
     <!-- Stats -->
     <div class="container">
       <div class="stats">
-        <div class="stat"><div class="stat-value">13</div><div class="stat-label">Chains</div></div>
+        <div class="stat"><div class="stat-value">19</div><div class="stat-label">Chains</div></div>
         <div class="stat"><div class="stat-value">25K</div><div class="stat-label">Free requests/day</div></div>
         <div class="stat"><div class="stat-value">3</div><div class="stat-label">Continents</div></div>
         <div class="stat"><div class="stat-value">99.9%</div><div class="stat-label">Uptime</div></div>
@@ -200,6 +200,16 @@
           <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">BNB Chain</div><div class="chain-url">bsc.chainrpc.net</div></div></div>
           <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Avalanche</div><div class="chain-url">avalanche.chainrpc.net</div></div></div>
           <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Gnosis</div><div class="chain-url">gnosis.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Ethereum Sepolia</div><div class="chain-url">sepolia.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">zkSync Era</div><div class="chain-url">zksync.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Linea</div><div class="chain-url">linea.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Scroll</div><div class="chain-url">scroll.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Blast</div><div class="chain-url">blast.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Mantle</div><div class="chain-url">mantle.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Polygon zkEVM</div><div class="chain-url">polygon-zkevm.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Mode</div><div class="chain-url">mode.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Zora</div><div class="chain-url">zora.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Celo</div><div class="chain-url">celo.chainrpc.net</div></div></div>
           <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Ethereum Sepolia</div><div class="chain-url">sepolia.chainrpc.net</div></div></div>
           <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Base Sepolia</div><div class="chain-url">base-sepolia.chainrpc.net</div></div></div>
         </div>
@@ -223,7 +233,7 @@
               <li>No account required</li>
               <li>Hard limit — upgrade when ready</li>
             </ul>
-            <a href="#keygen-box" class="btn btn-outline" style="width:100%">Get Free Key</a>
+            <a href="#top" class="btn btn-outline" style="width:100%">Get Free Key</a>
           </div>
           <div class="price-card featured">
             <div class="price-name">Growth</div>
@@ -236,7 +246,7 @@
               <li>Never blocked — pay for what you use</li>
               <li>USDC or USDT on Base</li>
             </ul>
-            <a href="#keygen-box" class="btn btn-primary" style="width:100%">Subscribe</a>
+            <a href="#top" class="btn btn-primary" style="width:100%">Subscribe</a>
           </div>
           <div class="price-card">
             <div class="price-name">Pro</div>
@@ -249,7 +259,7 @@
               <li>Never blocked — pay for what you use</li>
               <li>USDC or USDT on Base</li>
             </ul>
-            <a href="#keygen-box" class="btn btn-outline" style="width:100%">Subscribe</a>
+            <a href="#top" class="btn btn-outline" style="width:100%">Subscribe</a>
           </div>
         </div>
       </div>
