@@ -155,7 +155,7 @@
     <section class="hero">
       <div class="container">
         <h1>Production RPC<br>for <span class="accent">13 blockchains</span></h1>
-        <p>Standard JSON-RPC endpoints with sub-5ms cache hits, automatic failover, and zero configuration. Compatible with ethers.js, viem, web3.js, MetaMask, Hardhat, and Foundry.</p>
+        <p>Standard JSON-RPC endpoints with automatic failover and zero configuration. Compatible with ethers.js, viem, web3.js, MetaMask, Hardhat, and Foundry.</p>
 
         <!-- Key generator — primary action, right in the hero -->
         <div id="keygen-box" style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: 14px; padding: 32px; max-width: 540px; margin: 36px auto 0;">
@@ -164,11 +164,9 @@
           <button class="btn btn-primary" id="gen-btn" onclick="generateKey()" style="width: 100%; padding: 14px; font-size: 1rem;">Generate my free API key</button>
           <div id="key-display" style="display:none; background: #1e293b; border-radius: 8px; padding: 16px; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: #38bdf8; word-break: break-all; text-align: center;"></div>
           <div id="key-warning" style="display:none; color: #d97706; font-size: 0.85rem; margin-top: 10px; font-weight: 500; text-align: center;">Save this key now. It will not be shown again.</div>
-          <div id="key-usage" style="display:none; margin-top: 16px; background: #1e293b; border-radius: 8px; padding: 16px; text-align: left; font-size: 0.85rem; color: #e2e8f0;">
-            <div style="color: #64748b; margin-bottom: 8px;">Use it now:</div>
-            <pre style="margin:0; background:none; padding:0; border:none; font-size:0.85rem; color:#e2e8f0;"><span style="color:#93c5fd">const</span> provider = <span style="color:#93c5fd">new</span> JsonRpcProvider(
-  <span style="color:#86efac" id="key-url">'https://base.chainrpc.net/rpk_YOUR_KEY'</span>
-);</pre>
+          <div id="key-usage" style="display:none; margin-top: 16px; background: #1e293b; border-radius: 8px; padding: 16px; text-align: left; font-size: 0.75rem; color: #e2e8f0; overflow-x: auto;">
+            <div style="color: #64748b; margin-bottom: 8px; font-size: 0.8rem;">Use it now:</div>
+            <pre style="margin:0; background:none; padding:0; border:none; font-size:0.75rem; color:#e2e8f0; white-space:pre-wrap; word-break:break-all;"><span style="color:#93c5fd">const</span> provider = <span style="color:#93c5fd">new</span> JsonRpcProvider(<span style="color:#86efac" id="key-url">'https://base.chainrpc.net/rpk_YOUR_KEY'</span>);</pre>
           </div>
         </div>
 
@@ -182,7 +180,7 @@
     <div class="container">
       <div class="stats">
         <div class="stat"><div class="stat-value">13</div><div class="stat-label">Chains</div></div>
-        <div class="stat"><div class="stat-value">&lt;2ms</div><div class="stat-label">Cache Latency</div></div>
+        <div class="stat"><div class="stat-value">25K</div><div class="stat-label">Free requests/day</div></div>
         <div class="stat"><div class="stat-value">3</div><div class="stat-label">Continents</div></div>
         <div class="stat"><div class="stat-value">99.9%</div><div class="stat-label">Uptime</div></div>
       </div>
@@ -261,28 +259,28 @@
     <!-- How it works -->
     <section class="section">
       <div class="container">
-        <h2 class="section-title">How billing works</h2>
-        <p class="section-sub">Your money stays in your wallet until we collect. You stay in full control.</p>
+        <h2 class="section-title">How it works</h2>
+        <p class="section-sub">Get your key, try our free tier. When ready, go to your account page with your key and use your own wallet to provision a budget we can pull when required.</p>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
           <div style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 28px;">
-            <div style="font-size: 1.5rem; margin-bottom: 8px;">1</div>
-            <div style="font-weight: 600; margin-bottom: 8px;">Get your free key</div>
-            <div style="color: var(--slate); font-size: 0.9rem;">One click above. Start calling any chain immediately.</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--blue); margin-bottom: 8px;">1</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Try free</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Generate your key above. 25,000 requests/day, all 13 chains. No commitment.</div>
           </div>
           <div style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 28px;">
-            <div style="font-size: 1.5rem; margin-bottom: 8px;">2</div>
-            <div style="font-weight: 600; margin-bottom: 8px;">Approve when ready</div>
-            <div style="color: var(--slate); font-size: 0.9rem;">Connect your wallet, pick a tier, approve USDC or USDT. Funds stay in your wallet.</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--blue); margin-bottom: 8px;">2</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Upgrade when ready</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Go to your <a href="account.html">account page</a> with your key. Pick a tier, connect your wallet, approve a USDC or USDT budget.</div>
           </div>
           <div style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 28px;">
-            <div style="font-size: 1.5rem; margin-bottom: 8px;">3</div>
-            <div style="font-weight: 600; margin-bottom: 8px;">We pull monthly</div>
-            <div style="color: var(--slate); font-size: 0.9rem;">Subscription + overflow charged from your approval. Revoke anytime to cancel.</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--blue); margin-bottom: 8px;">3</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">We pull what you use</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Your funds stay in your wallet. We pull the subscription monthly and overflow charges as needed. You stay in full control.</div>
           </div>
           <div style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 28px;">
-            <div style="font-size: 1.5rem; margin-bottom: 8px;">4</div>
-            <div style="font-weight: 600; margin-bottom: 8px;">Never blocked</div>
-            <div style="color: var(--slate); font-size: 0.9rem;">Go over your limit? We keep serving. Extra usage billed at overflow rate.</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--blue); margin-bottom: 8px;">4</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Cancel anytime</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Revoke the approval in your wallet. That's it. No form, no email, no penalty. Your key continues on the free tier.</div>
           </div>
         </div>
       </div>
