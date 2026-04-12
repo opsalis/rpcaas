@@ -238,6 +238,7 @@ app.post(['/', '/:apiKey'], async (req: Request, res: Response) => {
   res.setHeader('X-RateLimit-Remaining', meterResult.dailyRemaining === Infinity ? 'unlimited' : meterResult.dailyRemaining.toString());
   res.setHeader('X-RateLimit-Reset', meterResult.resetAt.toString());
   res.setHeader('X-Chain', chain);
+  if (meterResult.overflow) res.setHeader('X-Overflow', 'true');
 
   if (!meterResult.allowed) {
     metrics.rateLimited++;

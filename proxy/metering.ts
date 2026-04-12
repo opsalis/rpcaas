@@ -26,11 +26,13 @@ export interface MeterResult {
   allowed: boolean;
   /** Reason for rejection (if not allowed) */
   reason?: 'daily_limit' | 'monthly_limit' | 'rate_limit' | 'unknown';
-  /** Remaining daily requests */
+  /** Whether this request is overflow (beyond included, charged extra) */
+  overflow: boolean;
+  /** Remaining daily requests (included) */
   dailyRemaining: number;
   /** Daily limit for this tier */
   dailyLimit: number;
-  /** Remaining monthly requests */
+  /** Remaining monthly requests (included) */
   monthlyRemaining: number;
   /** Timestamp when daily counter resets (Unix seconds) */
   resetAt: number;
@@ -81,10 +83,11 @@ class MeteringService {
     // Clean old entries from sliding window (older than 1 second)
     entry.recentRequests = entry.recentRequests.filter(t => now - t < 1000);
 
-    // Check per-second rate limit
+    // Check per-second rate limit (hard cap for all tiers)
     if (entry.recentRequests.length >= config.ratePerSec) {
       return {
         allowed: false,
+        overflow: false,
         reason: 'rate_limit',
         dailyRemaining: Math.max(0, config.dailyLimit - entry.dailyCount),
         dailyLimit: config.dailyLimit,
@@ -94,36 +97,44 @@ class MeteringService {
     }
 
     // Check daily limit
-    if (entry.dailyCount >= config.dailyLimit) {
+    const overDaily = entry.dailyCount >= config.dailyLimit;
+    const overMonthly = entry.monthlyCount >= config.monthlyLimit;
+
+    if (overDaily || overMonthly) {
+      // Paid tiers: allow but mark as overflow (charged extra)
+      if (config.overflowPricePerReq > 0) {
+        entry.dailyCount++;
+        entry.monthlyCount++;
+        entry.recentRequests.push(now);
+        return {
+          allowed: true,
+          overflow: true,
+          dailyRemaining: 0,
+          dailyLimit: config.dailyLimit,
+          monthlyRemaining: 0,
+          resetAt: this.endOfDay(),
+        };
+      }
+      // Free tier: hard block
       return {
         allowed: false,
-        reason: 'daily_limit',
+        overflow: false,
+        reason: overDaily ? 'daily_limit' : 'monthly_limit',
         dailyRemaining: 0,
         dailyLimit: config.dailyLimit,
-        monthlyRemaining: Math.max(0, config.monthlyLimit - entry.monthlyCount),
+        monthlyRemaining: overMonthly ? 0 : Math.max(0, config.monthlyLimit - entry.monthlyCount),
         resetAt: this.endOfDay(),
       };
     }
 
-    // Check monthly limit
-    if (entry.monthlyCount >= config.monthlyLimit) {
-      return {
-        allowed: false,
-        reason: 'monthly_limit',
-        dailyRemaining: 0,
-        dailyLimit: config.dailyLimit,
-        monthlyRemaining: 0,
-        resetAt: this.endOfDay(),
-      };
-    }
-
-    // Allowed — increment all counters
+    // Within included limits
     entry.dailyCount++;
     entry.monthlyCount++;
     entry.recentRequests.push(now);
 
     return {
       allowed: true,
+      overflow: false,
       dailyRemaining: Math.max(0, config.dailyLimit - entry.dailyCount),
       dailyLimit: config.dailyLimit,
       monthlyRemaining: Math.max(0, config.monthlyLimit - entry.monthlyCount),
@@ -138,6 +149,7 @@ class MeteringService {
     const config = TIERS[tier];
     const entry = this.getEntry(apiKey);
     return {
+      overflow: entry.dailyCount >= config.dailyLimit || entry.monthlyCount >= config.monthlyLimit,
       dailyRemaining: Math.max(0, config.dailyLimit - entry.dailyCount),
       dailyLimit: config.dailyLimit,
       monthlyRemaining: Math.max(0, config.monthlyLimit - entry.monthlyCount),

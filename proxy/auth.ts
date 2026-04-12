@@ -8,7 +8,7 @@
 
 import * as crypto from 'crypto';
 
-export type Tier = 'free' | 'growth' | 'pro' | 'enterprise';
+export type Tier = 'free' | 'growth' | 'pro' | 'internal';
 
 export interface ApiKeyRecord {
   /** SHA-256 hash of the API key */
@@ -26,34 +26,46 @@ export interface ApiKeyRecord {
 }
 
 export interface TierConfig {
-  /** Maximum requests per day */
+  /** Included requests per day (soft cap for paid tiers) */
   dailyLimit: number;
-  /** Maximum requests per second */
+  /** Maximum requests per second (hard cap — burst protection) */
   ratePerSec: number;
-  /** Maximum requests per month */
+  /** Included requests per month */
   monthlyLimit: number;
+  /** Price per extra request beyond included (USDC, 0 = hard block) */
+  overflowPricePerReq: number;
+  /** Monthly subscription price in USDC */
+  monthlyPrice: number;
 }
 
 export const TIERS: Record<Tier, TierConfig> = {
   free: {
-    dailyLimit: 100_000,
-    ratePerSec: 10,
-    monthlyLimit: 3_000_000,
+    dailyLimit: 25_000,
+    ratePerSec: 3,
+    monthlyLimit: 750_000,
+    overflowPricePerReq: 0,
+    monthlyPrice: 0,
   },
   growth: {
-    dailyLimit: 1_000_000,
-    ratePerSec: 50,
-    monthlyLimit: 30_000_000,
+    dailyLimit: 500_000,
+    ratePerSec: 30,
+    monthlyLimit: 15_000_000,
+    overflowPricePerReq: 0.00001,
+    monthlyPrice: 29,
   },
   pro: {
-    dailyLimit: 10_000_000,
-    ratePerSec: 200,
-    monthlyLimit: 300_000_000,
+    dailyLimit: 5_000_000,
+    ratePerSec: 100,
+    monthlyLimit: 150_000_000,
+    overflowPricePerReq: 0.000005,
+    monthlyPrice: 99,
   },
-  enterprise: {
+  internal: {
     dailyLimit: Infinity,
-    ratePerSec: 1_000,
+    ratePerSec: Infinity,
     monthlyLimit: Infinity,
+    overflowPricePerReq: 0,
+    monthlyPrice: 0,
   },
 };
 
