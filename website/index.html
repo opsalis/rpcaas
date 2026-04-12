@@ -3,584 +3,324 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChainRPC — Multi-Chain RPC Endpoints, Free Tier</title>
-  <meta name="description" content="Multi-chain RPC endpoints for blockchain developers. Base, Optimism, Arbitrum, Polygon, Ethereum. Free tier: 100K requests/day. Pay with Visa, Mastercard, or USDC.">
-  <meta name="keywords" content="RPC endpoint, blockchain API, Base RPC, Optimism RPC, Arbitrum RPC, Polygon RPC, Ethereum RPC, JSON-RPC, USDC payment, web3 API, multi-chain RPC">
+  <title>ChainRPC — Reliable Multi-Chain RPC Infrastructure</title>
+  <meta name="description" content="Multi-chain JSON-RPC endpoints for production applications. 13 blockchains, sub-5ms cache hits, automatic failover. Free tier available.">
+  <meta name="keywords" content="RPC endpoint, blockchain API, Base RPC, Ethereum RPC, JSON-RPC, multi-chain, web3 infrastructure">
   <link rel="canonical" href="https://chainrpc.net/">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%9A%A1</text></svg>">
-  <!-- Open Graph -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f1729'/%3E%3Cpath d='M8 16h4l2-4 4 8 2-4h4' stroke='%2338bdf8' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://chainrpc.net/">
-  <meta property="og:title" content="ChainRPC — Multi-Chain RPC Endpoints, Free Tier">
-  <meta property="og:description" content="Multi-chain RPC endpoints. Base, Optimism, Arbitrum, Polygon, Ethereum. Free tier: 100K requests/day. Pay with card or USDC.">
-  <meta property="og:image" content="https://chainrpc.net/og-image.png">
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ChainRPC — Multi-Chain RPC Endpoints, Free Tier">
-  <meta name="twitter:description" content="Multi-chain RPC endpoints. Free tier: 100K requests/day. Pay with card or USDC.">
-  <meta name="twitter:image" content="https://chainrpc.net/og-image.png">
+  <meta property="og:title" content="ChainRPC — Reliable Multi-Chain RPC Infrastructure">
+  <meta property="og:description" content="13 blockchains, sub-5ms cache hits, automatic failover. Built for production.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { DEFAULT: '#6366f1', dark: '#4f46e5', light: '#e0e7ff', 50: '#eef2ff' },
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    code, pre { font-family: 'JetBrains Mono', monospace; }
-    .btn-primary { background-color: #6366f1; color: #fff; }
-    .btn-primary:hover { background-color: #4f46e5; transform: translateY(-1px); }
-    .btn-primary { transition: all 0.2s ease; }
-    .btn-outline { border: 2px solid #6366f1; color: #6366f1; }
-    .btn-outline:hover { background-color: #eef2ff; }
-    .btn-outline { transition: all 0.2s ease; }
-    .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 12px; overflow-x: auto; }
-    .code-block .comment { color: #6c7086; }
-    .code-block .string { color: #a6e3a1; }
-    .code-block .keyword { color: #cba6f7; }
-    .chain-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-    .chain-card { transition: all 0.2s ease; }
-    .mobile-menu { display: none; }
-    .mobile-menu.open { display: flex; }
-    .tab-btn { cursor: pointer; }
-    .tab-btn.active { color: #6366f1; border-bottom: 2px solid #6366f1; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f1729;
+      --navy-light: #1a2744;
+      --blue: #38bdf8;
+      --blue-dim: #0ea5e9;
+      --blue-glow: rgba(56, 189, 248, 0.15);
+      --slate: #94a3b8;
+      --white: #f8fafc;
+      --gray-50: #f1f5f9;
+      --gray-100: #e2e8f0;
+      --gray-800: #1e293b;
+      --green: #34d399;
+      --radius: 10px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--navy); color: var(--white); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* Nav */
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(15, 23, 41, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(56, 189, 248, 0.1); }
+    nav .inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; }
+    .logo svg { width: 32px; height: 32px; }
+    .logo span { color: var(--blue); }
+    .nav-links { display: flex; align-items: center; gap: 32px; font-size: 0.9rem; font-weight: 500; color: var(--slate); }
+    .nav-links a:hover { color: var(--white); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: var(--blue); color: var(--navy); }
+    .btn-primary:hover { background: var(--blue-dim); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3); }
+    .btn-outline { border: 1.5px solid var(--slate); color: var(--slate); background: transparent; }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* Hero */
+    .hero { padding: 100px 0 80px; text-align: center; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 50%, var(--blue-glow) 0%, transparent 50%); pointer-events: none; }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 20px; position: relative; }
+    .hero h1 .accent { color: var(--blue); }
+    .hero p { font-size: 1.15rem; color: var(--slate); max-width: 560px; margin: 0 auto 36px; }
+    .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-code { margin-top: 48px; background: var(--navy-light); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 12px; padding: 24px 28px; max-width: 620px; margin-left: auto; margin-right: auto; text-align: left; font-size: 0.85rem; position: relative; }
+    .hero-code .comment { color: #64748b; }
+    .hero-code .str { color: var(--green); }
+    .hero-code .kw { color: var(--blue); }
+    .copy-btn { position: absolute; top: 12px; right: 12px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); color: var(--blue); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+    .copy-btn:hover { background: rgba(56, 189, 248, 0.2); }
+
+    /* Stats bar */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.1); border-radius: 12px; overflow: hidden; margin: 60px 0; }
+    .stat { background: var(--navy-light); padding: 24px; text-align: center; }
+    .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--white); }
+    .stat-label { font-size: 0.8rem; color: var(--slate); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Chains */
+    .section { padding: 80px 0; }
+    .section-title { font-size: 2rem; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.5px; }
+    .section-sub { color: var(--slate); margin-bottom: 48px; font-size: 1.05rem; }
+    .chains-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .chain-card { background: var(--navy-light); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+    .chain-card:hover { border-color: rgba(56, 189, 248, 0.3); transform: translateY(-2px); }
+    .chain-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .chain-name { font-weight: 600; font-size: 0.9rem; }
+    .chain-url { font-size: 0.75rem; color: var(--slate); font-family: 'JetBrains Mono', monospace; }
+
+    /* Pricing */
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .price-card { background: var(--navy-light); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 36px 32px; position: relative; }
+    .price-card.featured { border-color: var(--blue); box-shadow: 0 0 40px rgba(56, 189, 248, 0.1); }
+    .price-card.featured::before { content: 'Popular'; position: absolute; top: -12px; left: 32px; background: var(--blue); color: var(--navy); font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+    .price-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+    .price-amount { font-size: 2.5rem; font-weight: 800; margin-bottom: 4px; }
+    .price-amount .period { font-size: 1rem; font-weight: 400; color: var(--slate); }
+    .price-desc { color: var(--slate); font-size: 0.85rem; margin-bottom: 24px; }
+    .price-features { list-style: none; margin-bottom: 28px; }
+    .price-features li { padding: 8px 0; font-size: 0.9rem; color: var(--slate); display: flex; align-items: center; gap: 10px; }
+    .price-features li::before { content: ''; width: 18px; height: 18px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2338bdf8'%3E%3Cpath d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'/%3E%3C/svg%3E") no-repeat center; flex-shrink: 0; }
+
+    /* Get Key */
+    .getkey { background: var(--navy-light); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 16px; padding: 48px; text-align: center; margin: 60px 0; }
+    .getkey h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; }
+    .getkey p { color: var(--slate); margin-bottom: 24px; }
+    .key-display { background: var(--navy); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: var(--radius); padding: 16px 24px; font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: var(--blue); display: none; margin-top: 16px; word-break: break-all; }
+    .key-warning { color: #f59e0b; font-size: 0.85rem; margin-top: 12px; display: none; }
+
+    /* Footer */
+    footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 40px 0; margin-top: 80px; }
+    footer .inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    footer .links { display: flex; gap: 24px; font-size: 0.85rem; color: var(--slate); }
+    footer .links a:hover { color: var(--white); }
+    footer .copy { font-size: 0.8rem; color: #475569; }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .hero { padding: 60px 0 40px; }
+    }
   </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "RPCaaS",
-    "description": "Multi-chain RPC endpoints for blockchain developers. Base, Optimism, Arbitrum, Polygon, Ethereum.",
+    "name": "ChainRPC",
+    "description": "Multi-chain JSON-RPC endpoints for production blockchain applications.",
     "url": "https://chainrpc.net",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Any",
     "offers": [
-      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "100K requests/day, 3M/month" },
-      { "@type": "Offer", "name": "Growth", "price": "10", "priceCurrency": "USD", "description": "30M requests/month" },
-      { "@type": "Offer", "name": "Pro", "price": "50", "priceCurrency": "USD", "description": "300M requests/month" },
-      { "@type": "Offer", "name": "Enterprise", "price": "200", "priceCurrency": "USD", "description": "Unlimited requests" }
+      { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "25K requests/day" },
+      { "@type": "Offer", "name": "Growth", "price": "29", "priceCurrency": "USD", "description": "500K requests/day + overflow" },
+      { "@type": "Offer", "name": "Pro", "price": "99", "priceCurrency": "USD", "description": "5M requests/day + overflow" }
     ]
   }
   </script>
 </head>
-<body class="bg-white text-gray-900 antialiased">
+<body>
 
-  <!-- Nav -->
-  <nav class="border-b border-gray-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-      <a href="/" class="text-xl font-bold tracking-tight">
-        <span class="text-indigo-500">RPC</span><span class="text-gray-900">aaS</span>
+  <nav>
+    <div class="container inner">
+      <a href="/" class="logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="6" fill="#0f1729"/>
+          <rect width="32" height="32" rx="6" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.3"/>
+          <path d="M8 16h4l2-4 4 8 2-4h4" stroke="#38bdf8" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Chain<span>RPC</span>
       </a>
-      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-        <a href="#chains" class="hover:text-gray-900 transition">Chains</a>
-        <a href="#pricing" class="hover:text-gray-900 transition">Pricing</a>
-        <a href="#examples" class="hover:text-gray-900 transition">Examples</a>
-        <a href="/docs.html" class="hover:text-gray-900 transition">Docs</a>
+      <div class="nav-links">
+        <a href="#chains">Chains</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#start">Get Started</a>
+        <a href="/docs.html">Docs</a>
+        <a href="/terms.html">Terms</a>
       </div>
-      <div class="flex items-center gap-3">
-        <a href="#pricing" class="btn-primary text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm">
-          Get API Key
-        </a>
-        <button aria-label="Toggle mobile menu" onclick="document.getElementById('mobile-nav').classList.toggle('open')" class="md:hidden p-2 text-gray-600 hover:text-gray-900">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-      </div>
-    </div>
-    <div id="mobile-nav" class="mobile-menu flex-col gap-2 px-6 pb-4 md:hidden text-sm font-medium text-gray-600">
-      <a href="#chains" class="py-2 hover:text-gray-900 transition">Chains</a>
-      <a href="#pricing" class="py-2 hover:text-gray-900 transition">Pricing</a>
-      <a href="#examples" class="py-2 hover:text-gray-900 transition">Examples</a>
-      <a href="/docs.html" class="py-2 hover:text-gray-900 transition">Docs</a>
+      <a href="#start" class="btn btn-primary">Get Free Key</a>
     </div>
   </nav>
 
-  <!-- Hero -->
-  <section class="bg-gradient-to-br from-indigo-50 via-white to-violet-50">
-    <div class="max-w-6xl mx-auto px-6 pt-24 pb-32 text-center">
-      <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-6 text-gray-900">
-        Multi-chain RPC endpoints<br>
-        <span class="text-indigo-500">Pay by card or USDC</span>
-      </h1>
-      <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-        Base, Optimism, Arbitrum, Polygon, Ethereum. Standard JSON-RPC.
-        Free tier: 100K requests/day. No sign-up, no KYC.
-      </p>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="#pricing" class="btn-primary text-base font-semibold px-8 py-3.5 rounded-xl shadow-md w-full sm:w-auto">
-          Get Your API Key
-        </a>
-        <a href="#examples" class="btn-outline text-base font-semibold px-8 py-3.5 rounded-xl w-full sm:w-auto">
-          View Examples
-        </a>
-      </div>
-      <div class="mt-10 code-block p-4 max-w-2xl mx-auto text-left text-sm">
-        <pre><span class="comment">// Connect to any chain in seconds</span>
-<span class="keyword">const</span> provider = <span class="keyword">new</span> JsonRpcProvider(
-  <span class="string">'https://rpc.opsalis.com/v1/base/YOUR_API_KEY'</span>
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <h1>Production RPC<br>for <span class="accent">13 blockchains</span></h1>
+        <p>Standard JSON-RPC endpoints with sub-5ms cache hits, automatic failover, and zero configuration. Compatible with ethers.js, viem, web3.js, MetaMask, Hardhat, and Foundry.</p>
+        <div class="hero-buttons">
+          <a href="#start" class="btn btn-primary">Get Free API Key</a>
+          <a href="#pricing" class="btn btn-outline">View Pricing</a>
+        </div>
+        <div class="hero-code">
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('https://base.chainrpc.net/rpk_YOUR_KEY')">Copy</button>
+          <pre><span class="comment">// That's it. Standard JSON-RPC provider.</span>
+<span class="kw">const</span> provider = <span class="kw">new</span> JsonRpcProvider(
+  <span class="str">'https://base.chainrpc.net/rpk_YOUR_KEY'</span>
 );
-<span class="keyword">const</span> block = <span class="keyword">await</span> provider.getBlockNumber();</pre>
+<span class="kw">const</span> block = <span class="kw">await</span> provider.getBlockNumber();</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <div class="container">
+      <div class="stats">
+        <div class="stat"><div class="stat-value">13</div><div class="stat-label">Chains</div></div>
+        <div class="stat"><div class="stat-value">&lt;2ms</div><div class="stat-label">Cache Latency</div></div>
+        <div class="stat"><div class="stat-value">3</div><div class="stat-label">Continents</div></div>
+        <div class="stat"><div class="stat-value">99.9%</div><div class="stat-label">Uptime</div></div>
       </div>
     </div>
-  </section>
 
-  <!-- Supported Chains -->
-  <section id="chains" class="py-24 border-t border-gray-100">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">5 chains, one endpoint</h2>
-        <p class="text-gray-600 max-w-xl mx-auto">Standard JSON-RPC. Same URL pattern for every chain. Switch chains by changing one word.</p>
+    <!-- Chains -->
+    <section id="chains" class="section">
+      <div class="container">
+        <h2 class="section-title">Supported Chains</h2>
+        <p class="section-sub">One URL pattern for every chain. Switch by changing the subdomain.</p>
+        <div class="chains-grid">
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Ethereum</div><div class="chain-url">ethereum.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Base</div><div class="chain-url">base.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Arbitrum One</div><div class="chain-url">arbitrum.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Optimism</div><div class="chain-url">optimism.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Polygon PoS</div><div class="chain-url">polygon.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">BNB Chain</div><div class="chain-url">bsc.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Avalanche</div><div class="chain-url">avalanche.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Gnosis</div><div class="chain-url">gnosis.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Ethereum Sepolia</div><div class="chain-url">sepolia.chainrpc.net</div></div></div>
+          <div class="chain-card"><div class="chain-dot"></div><div><div class="chain-name">Base Sepolia</div><div class="chain-url">base-sepolia.chainrpc.net</div></div></div>
+        </div>
       </div>
-      <div class="grid md:grid-cols-5 gap-4">
-        <!-- Base -->
-        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
-            <span class="text-blue-600 font-bold text-lg">B</span>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="section">
+      <div class="container">
+        <h2 class="section-title">Simple pricing</h2>
+        <p class="section-sub">Start free. Pay with USDC or USDT on Base when you need more. No credit card, no KYC.</p>
+        <div class="pricing-grid">
+          <div class="price-card">
+            <div class="price-name">Free</div>
+            <div class="price-amount">$0</div>
+            <div class="price-desc">For prototyping and testing</div>
+            <ul class="price-features">
+              <li>25,000 requests / day</li>
+              <li>3 requests / second</li>
+              <li>All 13 chains included</li>
+              <li>No account required</li>
+              <li>Hard limit — upgrade when ready</li>
+            </ul>
+            <a href="#start" class="btn btn-outline" style="width:100%">Get Free Key</a>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-1">Base</h3>
-          <p class="text-xs text-gray-500">Chain ID 8453</p>
-          <code class="text-xs text-indigo-600 mt-2 block">/v1/base/</code>
-        </div>
-        <!-- Optimism -->
-        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <span class="text-red-600 font-bold text-lg">O</span>
+          <div class="price-card featured">
+            <div class="price-name">Growth</div>
+            <div class="price-amount">$29 <span class="period">/ month</span></div>
+            <div class="price-desc">For production applications</div>
+            <ul class="price-features">
+              <li>500,000 requests / day included</li>
+              <li>30 requests / second</li>
+              <li>Overflow: $10 per extra million</li>
+              <li>Never blocked — pay for what you use</li>
+              <li>USDC or USDT on Base</li>
+            </ul>
+            <a href="#start" class="btn btn-primary" style="width:100%">Subscribe</a>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-1">Optimism</h3>
-          <p class="text-xs text-gray-500">Chain ID 10</p>
-          <code class="text-xs text-indigo-600 mt-2 block">/v1/optimism/</code>
-        </div>
-        <!-- Arbitrum -->
-        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-4">
-            <span class="text-sky-600 font-bold text-lg">A</span>
+          <div class="price-card">
+            <div class="price-name">Pro</div>
+            <div class="price-amount">$99 <span class="period">/ month</span></div>
+            <div class="price-desc">For high-throughput systems</div>
+            <ul class="price-features">
+              <li>5,000,000 requests / day included</li>
+              <li>100 requests / second</li>
+              <li>Overflow: $5 per extra million</li>
+              <li>Never blocked — pay for what you use</li>
+              <li>USDC or USDT on Base</li>
+            </ul>
+            <a href="#start" class="btn btn-outline" style="width:100%">Subscribe</a>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-1">Arbitrum</h3>
-          <p class="text-xs text-gray-500">Chain ID 42161</p>
-          <code class="text-xs text-indigo-600 mt-2 block">/v1/arbitrum/</code>
         </div>
-        <!-- Polygon -->
-        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
-            <span class="text-purple-600 font-bold text-lg">P</span>
+      </div>
+    </section>
+
+    <!-- Get Key -->
+    <section id="start" class="section">
+      <div class="container">
+        <div class="getkey">
+          <h2>Get your API key</h2>
+          <p>One click. No email, no account, no sign-up. Save your key — it cannot be recovered.</p>
+          <button class="btn btn-primary" id="gen-btn" onclick="generateKey()">Generate Free API Key</button>
+          <div class="key-display" id="key-display"></div>
+          <div class="key-warning" id="key-warning">Save this key now. It will not be shown again. Treat it like a password.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">How billing works</h2>
+        <p class="section-sub">Your money stays in your wallet until we collect. You stay in full control.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
+          <div style="background: var(--navy-light); border-radius: 12px; padding: 28px;">
+            <div style="font-size: 1.5rem; margin-bottom: 8px;">1</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Get your free key</div>
+            <div style="color: var(--slate); font-size: 0.9rem;">One click above. Start calling any chain immediately.</div>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-1">Polygon</h3>
-          <p class="text-xs text-gray-500">Chain ID 137</p>
-          <code class="text-xs text-indigo-600 mt-2 block">/v1/polygon/</code>
-        </div>
-        <!-- Ethereum -->
-        <div class="chain-card bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-          <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <span class="text-gray-600 font-bold text-lg">E</span>
+          <div style="background: var(--navy-light); border-radius: 12px; padding: 28px;">
+            <div style="font-size: 1.5rem; margin-bottom: 8px;">2</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Approve when ready</div>
+            <div style="color: var(--slate); font-size: 0.9rem;">Connect your wallet, pick a tier, approve USDC or USDT. Funds stay in your wallet.</div>
           </div>
-          <h3 class="font-semibold text-gray-900 mb-1">Ethereum</h3>
-          <p class="text-xs text-gray-500">Chain ID 1</p>
-          <code class="text-xs text-indigo-600 mt-2 block">/v1/ethereum/</code>
-        </div>
-      </div>
-      <p class="text-center text-sm text-gray-500 mt-8">
-        Also accepts aliases: <code class="text-xs bg-gray-100 px-2 py-1 rounded">op</code>,
-        <code class="text-xs bg-gray-100 px-2 py-1 rounded">arb</code>,
-        <code class="text-xs bg-gray-100 px-2 py-1 rounded">matic</code>,
-        <code class="text-xs bg-gray-100 px-2 py-1 rounded">eth</code>,
-        or chain IDs like <code class="text-xs bg-gray-100 px-2 py-1 rounded">8453</code>
-      </p>
-    </div>
-  </section>
-
-  <!-- Why Us -->
-  <section class="py-24 border-t border-gray-100 bg-gray-50">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Why switch from Alchemy?</h2>
-      </div>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center mb-5">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div style="background: var(--navy-light); border-radius: 12px; padding: 28px;">
+            <div style="font-size: 1.5rem; margin-bottom: 8px;">3</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">We pull monthly</div>
+            <div style="color: var(--slate); font-size: 0.9rem;">Subscription + overflow charged from your approval. Revoke anytime to cancel.</div>
           </div>
-          <h3 class="text-lg font-semibold mb-2 text-gray-900">80% cheaper</h3>
-          <p class="text-gray-600 text-sm leading-relaxed">30M requests/month for $10 vs $49 at Alchemy. Same standard JSON-RPC, lower price.</p>
-        </div>
-        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mb-5">
-            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <div style="background: var(--navy-light); border-radius: 12px; padding: 28px;">
+            <div style="font-size: 1.5rem; margin-bottom: 8px;">4</div>
+            <div style="font-weight: 600; margin-bottom: 8px;">Never blocked</div>
+            <div style="color: var(--slate); font-size: 0.9rem;">Go over your limit? We keep serving. Extra usage billed at overflow rate.</div>
           </div>
-          <h3 class="text-lg font-semibold mb-2 text-gray-900">No KYC, no sign-up</h3>
-          <p class="text-gray-600 text-sm leading-relaxed">Get an API key instantly. No email, no identity verification. Pay with Visa, Mastercard, or USDC when you need more.</p>
-        </div>
-        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-5">
-            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-          </div>
-          <h3 class="text-lg font-semibold mb-2 text-gray-900">Standard JSON-RPC</h3>
-          <p class="text-gray-600 text-sm leading-relaxed">Works with ethers.js, web3.js, viem, Hardhat, Foundry, MetaMask. Change one URL and you are done.</p>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
-  <!-- Pricing -->
-  <section id="pricing" class="py-24 border-t border-gray-100">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Simple pricing</h2>
-        <p class="text-gray-600 max-w-xl mx-auto">Start free. Upgrade when you need more. Pay with Visa, Mastercard, or USDC.</p>
+  <footer>
+    <div class="container inner">
+      <div class="links">
+        <a href="/docs.html">Documentation</a>
+        <a href="/terms.html">Terms of Service</a>
+        <a href="https://status.chainrpc.net">Status</a>
       </div>
-      <div class="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-        <!-- Free -->
-        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <h3 class="text-xl font-bold text-gray-900 mb-1">Free</h3>
-          <p class="text-gray-500 text-xs mb-6">Get started</p>
-          <div class="mb-6">
-            <span class="text-4xl font-extrabold text-gray-900">$0</span>
-            <span class="text-gray-500 text-sm">/month</span>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm text-gray-700">
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              100K requests/day
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              3M requests/month
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              10 req/sec
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              All 5 chains
-            </li>
-          </ul>
-          <a href="#" class="block text-center btn-outline text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
-            Get Free Key
-          </a>
-        </div>
-        <!-- Growth -->
-        <div class="bg-white border-2 border-indigo-500 rounded-2xl p-8 shadow-md relative">
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-xs font-semibold px-3 py-1 rounded-full">Popular</div>
-          <h3 class="text-xl font-bold text-gray-900 mb-1">Growth</h3>
-          <p class="text-gray-500 text-xs mb-6">Side projects</p>
-          <div class="mb-6">
-            <span class="text-4xl font-extrabold text-gray-900">$10</span>
-            <span class="text-gray-500 text-sm">/month</span>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm text-gray-700">
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              1M requests/day
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              30M requests/month
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              50 req/sec
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              All 5 chains
-            </li>
-          </ul>
-          <a href="#" class="block text-center btn-primary text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
-            Pay with Card or USDC
-          </a>
-        </div>
-        <!-- Pro -->
-        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <h3 class="text-xl font-bold text-gray-900 mb-1">Pro</h3>
-          <p class="text-gray-500 text-xs mb-6">Production apps</p>
-          <div class="mb-6">
-            <span class="text-4xl font-extrabold text-gray-900">$50</span>
-            <span class="text-gray-500 text-sm">/month</span>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm text-gray-700">
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              10M requests/day
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              300M requests/month
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              200 req/sec
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              All 5 chains
-            </li>
-          </ul>
-          <a href="#" class="block text-center btn-outline text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
-            Pay with Card or USDC
-          </a>
-        </div>
-        <!-- Enterprise -->
-        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <h3 class="text-xl font-bold text-gray-900 mb-1">Enterprise</h3>
-          <p class="text-gray-500 text-xs mb-6">Unlimited scale</p>
-          <div class="mb-6">
-            <span class="text-4xl font-extrabold text-gray-900">$200</span>
-            <span class="text-gray-500 text-sm">/month</span>
-          </div>
-          <ul class="space-y-3 mb-8 text-sm text-gray-700">
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              Unlimited requests
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              1,000 req/sec
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              All 5 chains
-            </li>
-            <li class="flex items-start gap-2">
-              <svg class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              Priority support
-            </li>
-          </ul>
-          <a href="#" class="block text-center btn-outline text-sm font-semibold px-6 py-2.5 rounded-lg w-full">
-            Pay with Card or USDC
-          </a>
-        </div>
-      </div>
-      <p class="text-center text-sm text-gray-500 mt-8">All plans include all 5 chains. Visa and Mastercard accepted — no crypto wallet needed.</p>
-    </div>
-  </section>
-
-  <!-- Code Examples -->
-  <section id="examples" class="py-24 border-t border-gray-100 bg-gray-50">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Works with your stack</h2>
-        <p class="text-gray-600">Change one URL. Everything else stays the same.</p>
-      </div>
-
-      <!-- Tabs -->
-      <div class="flex gap-6 border-b border-gray-200 mb-6 text-sm font-medium text-gray-500 overflow-x-auto">
-        <button class="tab-btn active pb-3 whitespace-nowrap" onclick="switchTab('curl')">curl</button>
-        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('ethers')">ethers.js</button>
-        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('web3')">web3.js</button>
-        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('viem')">viem</button>
-        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('python')">Python</button>
-        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('hardhat')">Hardhat</button>
-        <button class="tab-btn pb-3 whitespace-nowrap" onclick="switchTab('foundry')">Foundry</button>
-      </div>
-
-      <!-- curl -->
-      <div id="tab-curl" class="tab-content active">
-        <div class="code-block p-6 text-sm">
-          <pre><span class="comment"># Get latest block number on Base</span>
-curl https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY \
-  -X POST \
-  -H <span class="string">"Content-Type: application/json"</span> \
-  -d <span class="string">'{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'</span>
-
-<span class="comment"># Response:</span>
-<span class="comment"># {"jsonrpc":"2.0","result":"0x134a5b7","id":1}</span></pre>
-        </div>
-      </div>
-
-      <!-- ethers.js -->
-      <div id="tab-ethers" class="tab-content">
-        <div class="code-block p-6 text-sm">
-          <pre><span class="keyword">import</span> { JsonRpcProvider } <span class="keyword">from</span> <span class="string">'ethers'</span>;
-
-<span class="keyword">const</span> provider = <span class="keyword">new</span> JsonRpcProvider(
-  <span class="string">'https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY'</span>
-);
-
-<span class="keyword">const</span> blockNumber = <span class="keyword">await</span> provider.getBlockNumber();
-console.log(<span class="string">'Latest block:'</span>, blockNumber);
-
-<span class="keyword">const</span> balance = <span class="keyword">await</span> provider.getBalance(
-  <span class="string">'0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'</span>
-);
-console.log(<span class="string">'Balance:'</span>, balance.toString());</pre>
-        </div>
-      </div>
-
-      <!-- web3.js -->
-      <div id="tab-web3" class="tab-content">
-        <div class="code-block p-6 text-sm">
-          <pre><span class="keyword">import</span> { Web3 } <span class="keyword">from</span> <span class="string">'web3'</span>;
-
-<span class="keyword">const</span> web3 = <span class="keyword">new</span> Web3(
-  <span class="string">'https://rpc.opsalis.com/v1/optimism/rpk_YOUR_API_KEY'</span>
-);
-
-<span class="keyword">const</span> blockNumber = <span class="keyword">await</span> web3.eth.getBlockNumber();
-console.log(<span class="string">'Latest block:'</span>, blockNumber);</pre>
-        </div>
-      </div>
-
-      <!-- viem -->
-      <div id="tab-viem" class="tab-content">
-        <div class="code-block p-6 text-sm">
-          <pre><span class="keyword">import</span> { createPublicClient, http } <span class="keyword">from</span> <span class="string">'viem'</span>;
-<span class="keyword">import</span> { base } <span class="keyword">from</span> <span class="string">'viem/chains'</span>;
-
-<span class="keyword">const</span> client = createPublicClient({
-  chain: base,
-  transport: http(<span class="string">'https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY'</span>),
-});
-
-<span class="keyword">const</span> blockNumber = <span class="keyword">await</span> client.getBlockNumber();</pre>
-        </div>
-      </div>
-
-      <!-- Python -->
-      <div id="tab-python" class="tab-content">
-        <div class="code-block p-6 text-sm">
-          <pre><span class="keyword">from</span> web3 <span class="keyword">import</span> Web3
-
-w3 = Web3(Web3.HTTPProvider(
-    <span class="string">'https://rpc.opsalis.com/v1/polygon/rpk_YOUR_API_KEY'</span>
-))
-
-print(<span class="string">'Block:'</span>, w3.eth.block_number)
-print(<span class="string">'Balance:'</span>, w3.eth.get_balance(
-    <span class="string">'0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'</span>
-))</pre>
-        </div>
-      </div>
-
-      <!-- Hardhat -->
-      <div id="tab-hardhat" class="tab-content">
-        <div class="code-block p-6 text-sm">
-          <pre><span class="comment">// hardhat.config.js</span>
-module.exports = {
-  networks: {
-    base: {
-      url: <span class="string">'https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY'</span>,
-      chainId: 8453,
-    },
-    arbitrum: {
-      url: <span class="string">'https://rpc.opsalis.com/v1/arbitrum/rpk_YOUR_API_KEY'</span>,
-      chainId: 42161,
-    },
-  },
-};</pre>
-        </div>
-      </div>
-
-      <!-- Foundry -->
-      <div id="tab-foundry" class="tab-content">
-        <div class="code-block p-6 text-sm">
-          <pre><span class="comment"># Deploy contract to Base</span>
-forge create src/MyContract.sol:MyContract \
-  --rpc-url https://rpc.opsalis.com/v1/base/rpk_YOUR_API_KEY \
-  --private-key $PRIVATE_KEY
-
-<span class="comment"># Read from Polygon</span>
-cast call 0x... <span class="string">"balanceOf(address)(uint256)"</span> 0x... \
-  --rpc-url https://rpc.opsalis.com/v1/polygon/rpk_YOUR_API_KEY</pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Comparison -->
-  <section class="py-24 border-t border-gray-100">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Compare pricing</h2>
-        <p class="text-gray-600">30M requests/month across all providers.</p>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-200">
-              <th class="text-left py-3 px-4 font-semibold text-gray-900">Provider</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-900">Price</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-900">Payment</th>
-              <th class="text-left py-3 px-4 font-semibold text-gray-900">KYC</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-b border-gray-100 bg-indigo-50">
-              <td class="py-3 px-4 font-semibold text-indigo-600">RPCaaS</td>
-              <td class="py-3 px-4 font-bold text-indigo-600">$10/mo</td>
-              <td class="py-3 px-4">Card or USDC</td>
-              <td class="py-3 px-4">None</td>
-            </tr>
-            <tr class="border-b border-gray-100">
-              <td class="py-3 px-4 text-gray-700">Alchemy</td>
-              <td class="py-3 px-4 text-gray-700">$49/mo</td>
-              <td class="py-3 px-4 text-gray-500">Credit card</td>
-              <td class="py-3 px-4 text-gray-500">Email + name</td>
-            </tr>
-            <tr class="border-b border-gray-100">
-              <td class="py-3 px-4 text-gray-700">Infura</td>
-              <td class="py-3 px-4 text-gray-700">$50/mo</td>
-              <td class="py-3 px-4 text-gray-500">Credit card</td>
-              <td class="py-3 px-4 text-gray-500">Email + name</td>
-            </tr>
-            <tr class="border-b border-gray-100">
-              <td class="py-3 px-4 text-gray-700">QuickNode</td>
-              <td class="py-3 px-4 text-gray-700">$49/mo</td>
-              <td class="py-3 px-4 text-gray-500">Credit card</td>
-              <td class="py-3 px-4 text-gray-500">Email + name</td>
-            </tr>
-            <tr>
-              <td class="py-3 px-4 text-gray-700">Ankr</td>
-              <td class="py-3 px-4 text-gray-700">$49/mo</td>
-              <td class="py-3 px-4 text-gray-500">Card + crypto</td>
-              <td class="py-3 px-4 text-gray-500">Email</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="border-t border-gray-200 bg-gray-50">
-    <div class="max-w-6xl mx-auto px-6 py-12">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="text-sm text-gray-500">
-          <span class="font-semibold text-gray-900">ChainRPC</span> &mdash; Multi-chain RPC endpoints
-        </div>
-        <div class="flex items-center gap-6 text-sm text-gray-500">
-          <a href="/docs.html" class="hover:text-gray-900 transition">Docs</a>
-          <a href="/terms.html" class="hover:text-gray-900 transition">Terms</a>
-        </div>
-      </div>
-      <div class="mt-6 pt-6 border-t border-gray-200 flex flex-wrap items-center gap-4 text-xs text-gray-400">
-        <span>Also from us:</span>
-        <a href="https://sertone.net" class="hover:text-gray-600 transition">Sertone</a>
-        <a href="https://l2aas.net" class="hover:text-gray-600 transition">L2aaS</a>
-        <a href="https://chainclone.net" class="hover:text-gray-600 transition">ChainClone</a>
-        <a href="https://pingdog.net" class="hover:text-gray-600 transition">PingDog</a>
-        <a href="https://theloadtester.com" class="hover:text-gray-600 transition">LoadTester</a>
-        <a href="https://swarmbrowser.net" class="hover:text-gray-600 transition">SwarmBrowser</a>
-      </div>
-      <div class="mt-4 text-xs text-gray-400">&copy; 2026 ChainRPC</div>
+      <div class="copy">&copy; 2026 ChainRPC</div>
     </div>
   </footer>
 
   <script>
-    function switchTab(name) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + name).classList.add('active');
-      event.target.classList.add('active');
+    function generateKey() {
+      const chars = '0123456789abcdef';
+      let key = 'rpk_';
+      for (let i = 0; i < 32; i++) key += chars[Math.floor(Math.random() * 16)];
+      document.getElementById('key-display').textContent = key;
+      document.getElementById('key-display').style.display = 'block';
+      document.getElementById('key-warning').style.display = 'block';
+      document.getElementById('gen-btn').textContent = 'Key Generated';
+      document.getElementById('gen-btn').disabled = true;
+      document.getElementById('gen-btn').style.opacity = '0.5';
     }
   </script>
 </body>
