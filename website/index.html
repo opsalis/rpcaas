@@ -40,7 +40,6 @@
     nav .inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
     .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.5px; }
     .logo svg { width: 32px; height: 32px; }
-    .logo span { color: var(--blue); }
     .nav-links { display: flex; align-items: center; gap: 32px; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
     .nav-links a:hover { color: var(--text); }
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; transition: all 0.2s; cursor: pointer; border: none; }
@@ -136,11 +135,8 @@
   <nav>
     <div class="container inner">
       <a href="/" class="logo">
-        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" rx="6" fill="#0066ff"/>
-          <path d="M8 16h4l2-4 4 8 2-4h4" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Chain<span>RPC</span>
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="6" fill="#0066ff"/><path d="M8 16h4l2-4 4 8 2-4h4" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Chain<span style="color:var(--blue)">RPC</span></span>
       </a>
       <div class="nav-links">
         <a href="#chains">Chains</a>
