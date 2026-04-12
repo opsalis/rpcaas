@@ -132,7 +132,7 @@
             <div class="stat-label">Today</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value" id="usage-today-limit">/ 25,000</div>
+            <div class="stat-value" id="usage-today-limit">25,000</div>
             <div class="stat-label">Daily limit</div>
           </div>
           <div class="stat-item">
@@ -197,10 +197,10 @@
       // In production: read payment token from L2, then query allowance on Base
       var paymentToken = 'USDC'; // or 'USDT' — from L2 subscription record
       document.getElementById('allowance').textContent = '$142.00';
-      document.getElementById('allowance-label').textContent = 'Remaining ' + paymentToken;
+      document.getElementById('allowance-label').textContent = paymentToken + ' allowance';
       document.getElementById('usage-today').textContent = '4,218';
-      document.getElementById('usage-today-limit').textContent = '/ 500,000';
-      document.getElementById('usage-today-limit').textContent = '/ 25,000';
+      document.getElementById('usage-today-limit').textContent = '500,000';
+      document.getElementById('usage-today-limit').textContent = '500,000';
       document.getElementById('usage-month').textContent = '38,740';
       document.getElementById('overflow-cost').textContent = '$0.00';
       document.getElementById('usage-bar').style.width = '17%';
