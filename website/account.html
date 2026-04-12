@@ -172,10 +172,17 @@
     if (!apiKey || !apiKey.startsWith('rpk_')) {
       document.querySelector('.container').innerHTML = `
         <h1 class="page-title">Account</h1>
-        <div class="card" style="text-align:center; padding:48px;">
-          <p style="margin-bottom:16px;">Enter your API key to view your account.</p>
-          <a href="/docs.html" class="btn btn-primary">Go to Docs</a>
+        <div class="card" style="padding:48px;">
+          <p style="margin-bottom:16px; color:var(--text-secondary);">Enter your API key to view usage, billing, and download receipts.</p>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="key-input" placeholder="rpk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" spellcheck="false" autocomplete="off"
+              style="flex:1; padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius); font-family:'JetBrains Mono',monospace; font-size:0.9rem; outline:none;">
+            <button class="btn btn-primary" onclick="goToAccount()">Go</button>
+          </div>
         </div>`;
+      document.getElementById('key-input')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') goToAccount();
+      });
     } else {
       // In production: fetch account data from L2 chain + Base
       // For now: show the key and placeholder data
@@ -186,6 +193,23 @@
       // 2. Base USDC contract for: remaining allowance
       // 3. Our L2 for: payment history (Deposited events)
       // All rendered on-the-fly, nothing stored server-side.
+    }
+
+    function goToAccount() {
+      const key = document.getElementById('key-input')?.value.trim();
+      if (key && key.startsWith('rpk_')) {
+        window.location.href = '/account.html?key=' + encodeURIComponent(key);
+      }
+    }
+
+    function topUp() {
+      alert('Connect your wallet to increase your USDC/USDT approval.');
+    }
+
+    function regenerate() {
+      if (confirm('This will permanently kill your current key and create a new one. Your tier and balance transfer to the new key. Continue?')) {
+        alert('Key regeneration will be available when billing is live.');
+      }
     }
   </script>
 </body>
