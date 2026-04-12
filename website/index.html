@@ -141,12 +141,12 @@
       <div class="nav-links">
         <a href="#chains">Chains</a>
         <a href="#pricing">Pricing</a>
-        <a href="#start">Get Started</a>
+        <a href="#keygen-box">Get Started</a>
         <a href="/docs.html">Docs</a>
         <a href="/account.html">Account</a>
         <a href="/terms.html">Terms</a>
       </div>
-      <a href="#start" class="btn btn-primary">Get Free Key</a>
+      <a href="#keygen-box" class="btn btn-primary">Get Free Key</a>
     </div>
   </nav>
 
@@ -156,17 +156,24 @@
       <div class="container">
         <h1>Production RPC<br>for <span class="accent">13 blockchains</span></h1>
         <p>Standard JSON-RPC endpoints with sub-5ms cache hits, automatic failover, and zero configuration. Compatible with ethers.js, viem, web3.js, MetaMask, Hardhat, and Foundry.</p>
-        <div class="hero-buttons">
-          <a href="#start" class="btn btn-primary">Get Free API Key</a>
-          <a href="#pricing" class="btn btn-outline">View Pricing</a>
+
+        <!-- Key generator — primary action, right in the hero -->
+        <div id="keygen-box" style="background: var(--bg-alt); border: 1px solid var(--border); border-radius: 14px; padding: 32px; max-width: 540px; margin: 36px auto 0;">
+          <div style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">Try us now, free</div>
+          <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 20px;">25,000 requests/day. No email, no sign-up.</div>
+          <button class="btn btn-primary" id="gen-btn" onclick="generateKey()" style="width: 100%; padding: 14px; font-size: 1rem;">Generate my free API key</button>
+          <div id="key-display" style="display:none; background: #1e293b; border-radius: 8px; padding: 16px; margin-top: 16px; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: #38bdf8; word-break: break-all; text-align: center;"></div>
+          <div id="key-warning" style="display:none; color: #d97706; font-size: 0.85rem; margin-top: 10px; font-weight: 500; text-align: center;">Save this key now. It will not be shown again.</div>
+          <div id="key-usage" style="display:none; margin-top: 16px; background: #1e293b; border-radius: 8px; padding: 16px; text-align: left; font-size: 0.85rem; color: #e2e8f0;">
+            <div style="color: #64748b; margin-bottom: 8px;">Use it now:</div>
+            <pre style="margin:0; background:none; padding:0; border:none; font-size:0.85rem; color:#e2e8f0;"><span style="color:#93c5fd">const</span> provider = <span style="color:#93c5fd">new</span> JsonRpcProvider(
+  <span style="color:#86efac" id="key-url">'https://base.chainrpc.net/rpk_YOUR_KEY'</span>
+);</pre>
+          </div>
         </div>
-        <div class="hero-code">
-          <button class="copy-btn" onclick="navigator.clipboard.writeText('https://base.chainrpc.net/rpk_YOUR_KEY')">Copy</button>
-          <pre><span class="comment">// That's it. Standard JSON-RPC provider.</span>
-<span class="kw">const</span> provider = <span class="kw">new</span> JsonRpcProvider(
-  <span class="str">'https://base.chainrpc.net/rpk_YOUR_KEY'</span>
-);
-<span class="kw">const</span> block = <span class="kw">await</span> provider.getBlockNumber();</pre>
+
+        <div style="margin-top: 24px;">
+          <a href="#pricing" class="btn btn-outline">View pricing</a>
         </div>
       </div>
     </section>
@@ -218,7 +225,7 @@
               <li>No account required</li>
               <li>Hard limit — upgrade when ready</li>
             </ul>
-            <a href="#start" class="btn btn-outline" style="width:100%">Get Free Key</a>
+            <a href="#keygen-box" class="btn btn-outline" style="width:100%">Get Free Key</a>
           </div>
           <div class="price-card featured">
             <div class="price-name">Growth</div>
@@ -231,7 +238,7 @@
               <li>Never blocked — pay for what you use</li>
               <li>USDC or USDT on Base</li>
             </ul>
-            <a href="#start" class="btn btn-primary" style="width:100%">Subscribe</a>
+            <a href="#keygen-box" class="btn btn-primary" style="width:100%">Subscribe</a>
           </div>
           <div class="price-card">
             <div class="price-name">Pro</div>
@@ -244,24 +251,12 @@
               <li>Never blocked — pay for what you use</li>
               <li>USDC or USDT on Base</li>
             </ul>
-            <a href="#start" class="btn btn-outline" style="width:100%">Subscribe</a>
+            <a href="#keygen-box" class="btn btn-outline" style="width:100%">Subscribe</a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Get Key -->
-    <section id="start" class="section">
-      <div class="container">
-        <div class="getkey">
-          <h2>Get your API key</h2>
-          <p>One click. No email, no account, no sign-up. Save your key — it cannot be recovered.</p>
-          <button class="btn btn-primary" id="gen-btn" onclick="generateKey()">Generate Free API Key</button>
-          <div class="key-display" id="key-display"></div>
-          <div class="key-warning" id="key-warning">Save this key now. It will not be shown again. Treat it like a password.</div>
-        </div>
-      </div>
-    </section>
 
     <!-- How it works -->
     <section class="section">
@@ -307,13 +302,15 @@
 
   <script>
     function generateKey() {
-      const chars = '0123456789abcdef';
-      let key = 'rpk_';
-      for (let i = 0; i < 32; i++) key += chars[Math.floor(Math.random() * 16)];
+      var chars = '0123456789abcdef';
+      var key = 'rpk_';
+      for (var i = 0; i < 32; i++) key += chars[Math.floor(Math.random() * 16)];
       document.getElementById('key-display').textContent = key;
       document.getElementById('key-display').style.display = 'block';
       document.getElementById('key-warning').style.display = 'block';
-      document.getElementById('gen-btn').textContent = 'Key Generated';
+      document.getElementById('key-usage').style.display = 'block';
+      document.getElementById('key-url').textContent = "'https://base.chainrpc.net/" + key + "'";
+      document.getElementById('gen-btn').textContent = 'Key generated';
       document.getElementById('gen-btn').disabled = true;
       document.getElementById('gen-btn').style.opacity = '0.5';
     }
