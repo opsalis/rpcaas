@@ -153,7 +153,7 @@ async function signAndSend(env: Env, to: string, data: string): Promise<string> 
   // This keeps private key off Cloudflare (it's in CX43's env).
   //
   // For this deployment, we call the signing relay endpoint.
-  const relayUrl = 'https://api.chainrpc.net/relay/tx';
+  const relayUrl = 'https://relay.chainrpc.net/relay/tx';
   const res = await fetch(relayUrl, {
     method: 'POST',
     headers: {

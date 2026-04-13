@@ -456,8 +456,10 @@ async function checkEndpointHealth(endpoint: string): Promise<{ alive: boolean; 
       signal: controller.signal,
     });
     clearTimeout(timeout);
+    if (!resp.ok) return { alive: false, latencyMs: Date.now() - start };
     const data: any = await resp.json();
-    if (data.result && typeof data.result === 'string') {
+    // Accept any response that has a result field (string or number) — covers all chains
+    if (data.result !== undefined && data.result !== null) {
       return { alive: true, latencyMs: Date.now() - start };
     }
     return { alive: false, latencyMs: Date.now() - start };

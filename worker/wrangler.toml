@@ -10,7 +10,7 @@ workers_dev = true
 # Testing on Demo L2 (845302). For mainnet: switch to Base (8453).
 [vars]
 BILLING_RPC      = "https://demo.chainrpc.net"
-BILLING_CONTRACT = "TODO_REDEPLOY_TO_DEMO_L2"
+BILLING_CONTRACT = "0x981c775A91251393BDf341A0833d399E2A54Be13"
 MOCK_USDC        = "0x75E9b48F4a8f8E10f6d46a7D582aC2bEc85B7d81"
 TREASURY         = "0xFC1f07Dd7233fcc9d36562eCE8D3c1181AEcD2bf"
 

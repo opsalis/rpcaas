@@ -298,44 +298,57 @@ app.post(['/', '/:apiKey'], async (req: Request, res: Response) => {
     }
   }
 
-  try {
-    const startTime = Date.now();
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
-      signal: AbortSignal.timeout(30_000),
-    });
+  // Try each endpoint with automatic failover
+  const chainConfig = getChainConfig(chain);
+  const allEndpoints = chainConfig ? chainConfig.endpoints : [endpoint];
+  const endpointList = [endpoint, ...allEndpoints.filter(e => e !== endpoint)];
+  let lastErr: any = null;
 
-    const data: any = await response.json();
-    const latency = Date.now() - startTime;
-
-    incMetric(metrics.cacheMisses, chain);
-    incMetric(metrics.latencySum, chain, latency);
-    incMetric(metrics.latencyCount, chain);
-
-    if (ttl > 0 && !data.error) setCache(cacheKey, data, ttl);
-
-    res.setHeader('X-Cache', 'MISS');
-    res.setHeader('X-Upstream-Latency', `${latency}ms`);
-    res.status(response.status).json(data);
-  } catch (err: any) {
-    incMetric(metrics.errorsTotal, chain);
-    if (err.name === 'AbortError' || err.name === 'TimeoutError') {
-      res.status(504).json({
-        jsonrpc: '2.0',
-        error: { code: -32004, message: 'Chain node timeout (30s)' },
-        id: req.body?.id || null,
+  for (const tryEndpoint of endpointList) {
+    try {
+      const startTime = Date.now();
+      const response = await fetch(tryEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body),
+        signal: AbortSignal.timeout(15_000),
       });
+
+      const data: any = await response.json();
+      const latency = Date.now() - startTime;
+
+      incMetric(metrics.cacheMisses, chain);
+      incMetric(metrics.latencySum, chain, latency);
+      incMetric(metrics.latencyCount, chain);
+
+      if (ttl > 0 && !data.error) setCache(cacheKey, data, ttl);
+
+      res.setHeader('X-Cache', 'MISS');
+      res.setHeader('X-Upstream-Latency', `${latency}ms`);
+      res.status(response.status).json(data);
       return;
+    } catch (err: any) {
+      lastErr = err;
+      // Try next endpoint
     }
-    console.error(`[${chain}] Upstream error:`, err.message);
-    res.status(503).json({
+  }
+
+  // All endpoints failed
+  incMetric(metrics.errorsTotal, chain);
+  if (lastErr?.name === 'AbortError' || lastErr?.name === 'TimeoutError') {
+    res.status(504).json({
       jsonrpc: '2.0',
-      error: { code: -32003, message: 'Chain node unavailable' },
+      error: { code: -32004, message: 'Chain node timeout (15s)' },
       id: req.body?.id || null,
     });
+    return;
   }
+  console.error(`[${chain}] All upstreams failed:`, lastErr?.message);
+  res.status(503).json({
+    jsonrpc: '2.0',
+    error: { code: -32003, message: 'Chain node unavailable' },
+    id: req.body?.id || null,
+  });
 });
 
 // ── Backward compat: path-based → 301 redirect to hostname ──────────
