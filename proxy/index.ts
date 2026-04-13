@@ -19,7 +19,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-import { resolveFromHostname, resolveChain, getEndpoint, getChainConfig, listChains, listPublicChainInfo, CHAINS } from './chains';
+import { resolveFromHostname, resolveChain, getEndpoint, getChainConfig, listChains, listPublicChainInfo, CHAINS, getHealthStatus } from './chains';
 import { apiKeyStore, TIERS } from './auth';
 import { metering } from './metering';
 
@@ -117,15 +117,22 @@ function incMetric(map: Map<string, number>, key: string, amount = 1) {
 // ── Health check ────────────────────────────────────────────────────
 
 app.get('/health', async (_req: Request, res: Response) => {
+  const health = getHealthStatus();
+  const deadCount = Object.values(health).flat().filter(e => !e.alive).length;
   res.json({
-    status: 'ok',
-    version: '2.0.0',
+    status: deadCount === 0 ? 'ok' : 'degraded',
+    version: '2.1.0',
     routing: 'hostname-based ({chain}.chainrpc.net)',
     chains: listPublicChainInfo(),
     cache: { entries: cache.size },
     apiKeys: apiKeyStore.size,
+    upstreamHealth: { dead: deadCount, total: Object.values(health).flat().length },
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get('/health/endpoints', async (_req: Request, res: Response) => {
+  res.json(getHealthStatus());
 });
 
 // ── Prometheus metrics ──────────────────────────────────────────────
@@ -185,6 +192,16 @@ app.get('/metrics', (_req: Request, res: Response) => {
   lines.push('# HELP chainrpc_rate_limited_total Total rate-limited requests');
   lines.push('# TYPE chainrpc_rate_limited_total counter');
   lines.push(`chainrpc_rate_limited_total ${metrics.rateLimited}`);
+
+  lines.push('# HELP chainrpc_upstream_alive Whether upstream endpoint is alive (1=up, 0=down)');
+  lines.push('# TYPE chainrpc_upstream_alive gauge');
+  const health = getHealthStatus();
+  for (const [chain, endpoints] of Object.entries(health)) {
+    for (const ep of endpoints) {
+      const label = ep.endpoint.replace(/https?:\/\//, '').replace(/[/:]/g, '_');
+      lines.push(`chainrpc_upstream_alive{chain="${chain}",endpoint="${label}"} ${ep.alive ? 1 : 0}`);
+    }
+  }
 
   res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
   res.send(lines.join('\n') + '\n');

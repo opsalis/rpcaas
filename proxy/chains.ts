@@ -413,14 +413,83 @@ export function resolveChain(alias: string): string | undefined {
 }
 
 const endpointCounters = new Map<string, number>();
+const endpointHealth = new Map<string, { alive: boolean; lastCheck: number; latencyMs: number; failures: number }>();
+const HEALTH_CHECK_INTERVAL_MS = 30_000;
+const HEALTH_CHECK_TIMEOUT_MS = 3_000;
+const MAX_FAILURES_BEFORE_DEAD = 2;
 
 export function getEndpoint(chain: string): string | undefined {
   const config = CHAINS[chain];
   if (!config || config.endpoints.length === 0) return undefined;
+
+  const alive = config.endpoints.filter(ep => {
+    const h = endpointHealth.get(ep);
+    return !h || h.alive;
+  });
+
+  const pool = alive.length > 0 ? alive : config.endpoints;
   const counter = (endpointCounters.get(chain) || 0) + 1;
   endpointCounters.set(chain, counter);
-  return config.endpoints[counter % config.endpoints.length];
+  return pool[counter % pool.length];
 }
+
+export function getHealthStatus(): Record<string, { endpoint: string; alive: boolean; latencyMs: number; failures: number }[]> {
+  const result: Record<string, any[]> = {};
+  for (const [chain, config] of Object.entries(CHAINS)) {
+    result[chain] = config.endpoints.map(ep => {
+      const h = endpointHealth.get(ep);
+      return { endpoint: ep, alive: h?.alive ?? true, latencyMs: h?.latencyMs ?? 0, failures: h?.failures ?? 0 };
+    });
+  }
+  return result;
+}
+
+async function checkEndpointHealth(endpoint: string): Promise<{ alive: boolean; latencyMs: number }> {
+  const start = Date.now();
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT_MS);
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    const data: any = await resp.json();
+    if (data.result && typeof data.result === 'string') {
+      return { alive: true, latencyMs: Date.now() - start };
+    }
+    return { alive: false, latencyMs: Date.now() - start };
+  } catch {
+    return { alive: false, latencyMs: Date.now() - start };
+  }
+}
+
+async function runHealthChecks(): Promise<void> {
+  const allEndpoints = new Set<string>();
+  for (const config of Object.values(CHAINS)) {
+    for (const ep of config.endpoints) allEndpoints.add(ep);
+  }
+
+  await Promise.allSettled([...allEndpoints].map(async (ep) => {
+    const result = await checkEndpointHealth(ep);
+    const prev = endpointHealth.get(ep) || { alive: true, lastCheck: 0, latencyMs: 0, failures: 0 };
+
+    if (result.alive) {
+      endpointHealth.set(ep, { alive: true, lastCheck: Date.now(), latencyMs: result.latencyMs, failures: 0 });
+      if (!prev.alive) console.log(`[Health] ${ep} recovered (${result.latencyMs}ms)`);
+    } else {
+      const failures = prev.failures + 1;
+      const dead = failures >= MAX_FAILURES_BEFORE_DEAD;
+      endpointHealth.set(ep, { alive: !dead, lastCheck: Date.now(), latencyMs: result.latencyMs, failures });
+      if (dead && prev.alive) console.log(`[Health] ${ep} marked DEAD after ${failures} failures`);
+    }
+  }));
+}
+
+runHealthChecks();
+setInterval(runHealthChecks, HEALTH_CHECK_INTERVAL_MS);
 
 export function getChainConfig(chain: string): ChainConfig | undefined {
   return CHAINS[chain];
