@@ -93,6 +93,21 @@ class ApiKeyStore {
   private keys = new Map<string, ApiKeyRecord>();
 
   /**
+   * Register a known API key with a specific tier (for internal/pre-provisioned keys).
+   */
+  registerWithTier(rawKey: string, tier: Tier, label?: string): void {
+    const record: ApiKeyRecord = {
+      keyHash: hashKey(rawKey),
+      tier,
+      active: true,
+      createdAt: Date.now(),
+      expiresAt: 0,
+      label,
+    };
+    this.keys.set(record.keyHash, record);
+  }
+
+  /**
    * Register a new API key. Returns the raw key (show once, never again).
    */
   register(tier: Tier = 'free', label?: string): string {
@@ -111,14 +126,32 @@ class ApiKeyStore {
 
   /**
    * Validate an API key. Returns the record if valid, null otherwise.
+   *
+   * Any key with the rpk_ prefix is accepted as free tier without prior registration.
+   * Paid tiers are resolved from the in-memory store (set by billing worker webhook or
+   * on-chain polling — Phase 2). For now all rpk_ keys get free tier on first use.
    */
   validate(apiKey: string): ApiKeyRecord | null {
     const hash = hashKey(apiKey);
     const record = this.keys.get(hash);
-    if (!record) return null;
-    if (!record.active) return null;
-    if (record.expiresAt > 0 && Date.now() > record.expiresAt) return null;
-    return record;
+    if (record) {
+      if (!record.active) return null;
+      if (record.expiresAt > 0 && Date.now() > record.expiresAt) return null;
+      return record;
+    }
+    // Auto-register any rpk_ key as free tier on first use
+    if (typeof apiKey === 'string' && apiKey.startsWith('rpk_') && apiKey.length === 36) {
+      const newRecord: ApiKeyRecord = {
+        keyHash: hash,
+        tier: 'free',
+        active: true,
+        createdAt: Date.now(),
+        expiresAt: 0,
+      };
+      this.keys.set(hash, newRecord);
+      return newRecord;
+    }
+    return null;
   }
 
   /**

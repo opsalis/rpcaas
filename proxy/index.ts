@@ -373,9 +373,14 @@ app.use((_req: Request, res: Response) => {
 
 // ── Start ───────────────────────────────────────────────────────────
 
+// Register internal key (unlimited tier for all Opsalis services)
+const INTERNAL_KEY = process.env.CHAINRPC_INTERNAL_KEY || 'rpk_b79bf7a33b6baf60398b50b40265eafc';
+apiKeyStore.registerWithTier(INTERNAL_KEY, 'internal', 'opsalis-internal');
+console.log(`[Internal] Registered internal key (${INTERNAL_KEY.substring(0, 8)}...)`);
+
 app.listen(PORT, () => {
   const chains = listChains();
-  console.log(`ChainRPC proxy v2.0.0 listening on :${PORT}`);
+  console.log(`ChainRPC proxy v2.1.0 listening on :${PORT}`);
   console.log(`Supported chains (${chains.length}): ${chains.join(', ')}`);
   console.log(`Routing: hostname-based ({chain}.chainrpc.net)`);
 
