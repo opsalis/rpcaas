@@ -3,12 +3,16 @@ kind: Namespace
 metadata:
   name: chainrpc
 ---
-# DaemonSet: runs on EVERY k3s node (CDN-style caching)
+# DaemonSet: runs on EVERY k3s node (CDN-style caching + geo-routing)
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: chainrpc
   namespace: chainrpc
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 5m"
 spec:
   selector:
     matchLabels:
@@ -21,8 +25,10 @@ spec:
       containers:
         - name: chainrpc
           image: opsalis/chainrpc:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 3100
+              name: http
           env:
             - name: NODE_ENV
               value: production
@@ -30,6 +36,26 @@ spec:
               value: "3100"
             - name: CHAINRPC_DOMAIN
               value: chainrpc.net
+            # Geo-routing: NODE_NAME is mapped to region in proxy/index.ts (NODE_NAME_TO_REGION map).
+            # NODE_REGION env can override if set explicitly; otherwise inferred from NODE_NAME.
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            # Internal key for Opsalis services (unlimited tier)
+            - name: CHAINRPC_INTERNAL_KEY
+              value: rpk_b79bf7a33b6baf60398b50b40265eafc
+            # Own-chain RPC endpoints
+            - name: L1_RPC_1
+              value: http://l1-rpc.opsalis-l1.svc.cluster.local:8545
+            - name: L1_RPC_2
+              value: http://l1-rpc.opsalis-l1.svc.cluster.local:8545
+            - name: L2_RPC_1
+              value: http://l2-rpc.opsalis-l2-demo.svc.cluster.local:8545
+            - name: DEMO_L2_RPC
+              value: http://l2-rpc.opsalis-l2-demo.svc.cluster.local:8545
+            - name: FREE_L2_RPC
+              value: http://l2-rpc.opsalis-l2-free.svc.cluster.local:8545
           resources:
             requests:
               cpu: 50m
@@ -433,6 +459,1573 @@ spec:
   entryPoints: [web, websecure]
   routes:
     - match: Host(`celo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-ethereum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-ethereum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-ethereum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-ethereum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-ethereum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-ethereum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-ethereum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-ethereum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-ethereum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-ethereum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-ethereum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-ethereum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-base
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-base.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-base.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-base
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-base.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-base.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-base
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-base.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-base.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-base
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-base.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-base.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-arbitrum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-arbitrum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-arbitrum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-arbitrum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-arbitrum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-arbitrum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-arbitrum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-arbitrum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-arbitrum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-arbitrum
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-arbitrum.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-arbitrum.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-optimism
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-optimism.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-optimism.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-optimism
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-optimism.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-optimism.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-optimism
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-optimism.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-optimism.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-optimism
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-optimism.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-optimism.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-polygon
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-polygon.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-polygon.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-polygon
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-polygon.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-polygon.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-polygon
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-polygon.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-polygon.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-polygon
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-polygon.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-polygon.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-bsc
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-bsc.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-bsc.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-bsc
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-bsc.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-bsc.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-bsc
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-bsc.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-bsc.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-bsc
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-bsc.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-bsc.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-avalanche
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-avalanche.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-avalanche.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-avalanche
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-avalanche.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-avalanche.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-avalanche
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-avalanche.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-avalanche.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-avalanche
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-avalanche.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-avalanche.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-gnosis
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-gnosis.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-gnosis.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-gnosis
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-gnosis.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-gnosis.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-gnosis
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-gnosis.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-gnosis.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-gnosis
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-gnosis.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-gnosis.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-base-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-base-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-base-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-base-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-base-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-base-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-base-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-base-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-base-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-base-sepolia
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-base-sepolia.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-base-sepolia.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-zksync
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-zksync.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-zksync.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-zksync
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-zksync.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-zksync.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-zksync
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-zksync.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-zksync.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-zksync
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-zksync.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-zksync.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-linea
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-linea.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-linea.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-linea
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-linea.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-linea.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-linea
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-linea.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-linea.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-linea
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-linea.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-linea.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-scroll
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-scroll.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-scroll.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-scroll
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-scroll.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-scroll.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-scroll
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-scroll.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-scroll.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-scroll
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-scroll.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-scroll.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-blast
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-blast.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-blast.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-blast
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-blast.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-blast.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-blast
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-blast.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-blast.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-blast
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-blast.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-blast.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-mantle
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-mantle.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-mantle.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-mantle
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-mantle.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-mantle.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-mantle
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-mantle.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-mantle.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-mantle
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-mantle.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-mantle.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-polygon-zkevm
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-polygon-zkevm.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-polygon-zkevm.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-polygon-zkevm
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-polygon-zkevm.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-polygon-zkevm.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-polygon-zkevm
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-polygon-zkevm.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-polygon-zkevm.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-polygon-zkevm
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-polygon-zkevm.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-polygon-zkevm.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-mode
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-mode.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-mode.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-mode
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-mode.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-mode.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-mode
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-mode.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-mode.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-mode
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-mode.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-mode.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-zora
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-zora.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-zora.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-zora
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-zora.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-zora.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-zora
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-zora.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-zora.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-zora
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-zora.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-zora.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-celo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-celo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-celo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-celo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-celo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-celo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-celo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-celo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-celo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-celo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-celo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-celo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-l1
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-l1.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-l1.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-l1
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-l1.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-l1.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-l1
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-l1.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-l1.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-l1
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-l1.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-l1.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-l2
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-l2.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-l2.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-l2
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-l2.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-l2.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-l2
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-l2.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-l2.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-l2
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-l2.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-l2.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-demo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-demo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-demo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-demo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-demo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-demo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-demo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-demo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-demo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-demo
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-demo.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-demo.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-am-free
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: am-free.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`am-free.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-eu-free
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: eu-free.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`eu-free.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-as-free
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: as-free.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`as-free.chainrpc.net`)
+      kind: Rule
+      services:
+        - name: chainrpc
+          port: 3100
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chainrpc-sa-free
+  namespace: chainrpc
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: sa-free.chainrpc.net
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  entryPoints: [web, websecure]
+  routes:
+    - match: Host(`sa-free.chainrpc.net`)
       kind: Rule
       services:
         - name: chainrpc

@@ -343,16 +343,13 @@ export const CHAINS: Record<string, ChainConfig> = {
     gasToken: 'CELO',
     blockTimeSec: 5,
   },
-  'sertone-l1': {
-    name: 'Sertone L1',
-    chainId: 845300,
+  'opsalis-l1': {
+    name: 'Opsalis L1',
+    chainId: 845310,
     subdomain: 'l1',
     endpoints: [
-      process.env.L1_RPC_1 || 'http://node1.zone2serve.top:8545',
-      process.env.L1_RPC_2 || 'http://node2.zone2serve.top:8545',
-      process.env.L1_RPC_3 || 'http://node3.zone2serve.top:8545',
-      process.env.L1_RPC_4 || 'http://node4.zone2serve.top:8545',
-      process.env.L1_RPC_5 || 'http://node6.zone2serve.top:8545',
+      process.env.L1_RPC_1 || 'http://l1-rpc.opsalis-l1.svc.cluster.local:8545',
+      process.env.L1_RPC_2 || 'http://l1-rpc.opsalis-l1.svc.cluster.local:8545',
     ],
     explorerTx: 'https://explorer.l2aas.net/tx/{hash}',
     explorerBlock: 'https://explorer.l2aas.net/block/{hash}',
@@ -361,13 +358,12 @@ export const CHAINS: Record<string, ChainConfig> = {
     gasToken: 'OPSGAS',
     blockTimeSec: 6,
   },
-  'sertone-l2': {
-    name: 'Sertone L2',
-    chainId: 845301,
+  'opsalis-l2': {
+    name: 'Opsalis L2 (Demo)',
+    chainId: 845312,
     subdomain: 'l2',
     endpoints: [
-      process.env.L2_RPC_1 || 'http://l2node2.zone2serve.top:8545',
-      process.env.L2_RPC_2 || 'http://l2node1.zone2serve.top:8545',
+      process.env.L2_RPC_1 || 'http://l2-rpc.opsalis-l2-demo.svc.cluster.local:8545',
     ],
     explorerTx: 'https://explorer.l2aas.net/tx/{hash}',
     explorerBlock: 'https://explorer.l2aas.net/block/{hash}',
@@ -376,18 +372,32 @@ export const CHAINS: Record<string, ChainConfig> = {
     gasToken: 'OPSGAS',
     blockTimeSec: 2,
   },
-  'sertone-demo': {
-    name: 'Sertone Demo',
-    chainId: 845302,
+  'opsalis-demo': {
+    name: 'Opsalis Demo',
+    chainId: 845312,
     subdomain: 'demo',
     endpoints: [
-      process.env.DEMO_L2_RPC || 'http://demo-l2-geth:8545',
+      process.env.DEMO_L2_RPC || 'http://l2-rpc.opsalis-l2-demo.svc.cluster.local:8545',
     ],
     explorerTx: 'https://explorer.l2aas.net/demo/tx/{hash}',
     explorerBlock: 'https://explorer.l2aas.net/demo/block/{hash}',
     explorerAddress: 'https://explorer.l2aas.net/demo/address/{hash}',
     isOwn: true,
     gasToken: 'DEMO',
+    blockTimeSec: 2,
+  },
+  'opsalis-free': {
+    name: 'Opsalis Free L2',
+    chainId: 845320,
+    subdomain: 'free',
+    endpoints: [
+      process.env.FREE_L2_RPC || 'http://l2-rpc.opsalis-l2-free.svc.cluster.local:8545',
+    ],
+    explorerTx: 'https://explorer.l2aas.net/free/tx/{hash}',
+    explorerBlock: 'https://explorer.l2aas.net/free/block/{hash}',
+    explorerAddress: 'https://explorer.l2aas.net/free/address/{hash}',
+    isOwn: true,
+    gasToken: 'OPSGAS',
     blockTimeSec: 2,
   },
 };
@@ -404,8 +414,17 @@ for (const [canonical, config] of Object.entries(CHAINS)) {
   aliasMap.set(String(config.chainId), canonical);
 }
 
+// Regional hostname format: {region}-{chain}.chainrpc.net
+// e.g. eu-ethereum.chainrpc.net → strip "eu-" prefix → ethereum.chainrpc.net
+const REGIONAL_HOSTNAME_RE = /^(am|eu|as|sa)-/;
+
 export function resolveFromHostname(hostname: string): string | undefined {
-  return hostnameMap.get(hostname.toLowerCase());
+  const h = hostname.toLowerCase();
+  // Try direct match first (e.g. ethereum.chainrpc.net)
+  if (hostnameMap.has(h)) return hostnameMap.get(h);
+  // Strip regional prefix (e.g. eu-ethereum.chainrpc.net → ethereum.chainrpc.net)
+  const stripped = h.replace(REGIONAL_HOSTNAME_RE, '');
+  return hostnameMap.get(stripped);
 }
 
 export function resolveChain(alias: string): string | undefined {

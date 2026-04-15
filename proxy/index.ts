@@ -5,8 +5,8 @@
  *   POST https://ethereum.chainrpc.net/          (free tier, rate-limited)
  *   POST https://ethereum.chainrpc.net/KEY       (authenticated, higher limits)
  *   POST https://base.chainrpc.net/
- *   POST https://l1.chainrpc.net/                (Sertone L1)
- *   POST https://demo.chainrpc.net/              (Sertone Demo L2)
+ *   POST https://l1.chainrpc.net/                (Opsalis L1)
+ *   POST https://demo.chainrpc.net/              (Opsalis Demo L2)
  *
  * Chain is resolved from req.hostname (subdomain → chain config).
  * Standard JSON-RPC: POST to root URL, no special headers needed.
@@ -14,6 +14,10 @@
  *
  * CDN Architecture: DaemonSet on every k3s node. Cache hits return in <5ms.
  * Cache misses forward to upstream RPCs with round-robin failover.
+ *
+ * Geo-routing: Cloudflare provides CF-IPCountry header. Non-regional requests
+ * are 302-redirected to the nearest regional subdomain (am/eu/as/sa).
+ * Regional requests (e.g. eu.ethereum.chainrpc.net) are served directly.
  */
 
 import express, { Request, Response, NextFunction } from 'express';
@@ -22,6 +26,95 @@ import { v4 as uuidv4 } from 'uuid';
 import { resolveFromHostname, resolveChain, getEndpoint, getChainConfig, listChains, listPublicChainInfo, CHAINS, getHealthStatus } from './chains';
 import { apiKeyStore, TIERS } from './auth';
 import { metering } from './metering';
+
+// ── Geo-routing ─────────────────────────────────────────────────────
+
+type Region = 'am' | 'eu' | 'as' | 'sa';
+
+const COUNTRY_TO_REGION: Record<string, Region> = {
+  // Americas
+  US: 'am', CA: 'am', MX: 'am',
+  // Latin America
+  BR: 'sa', AR: 'sa', CL: 'sa', CO: 'sa', PE: 'sa',
+  // Europe
+  FR: 'eu', DE: 'eu', GB: 'eu', IT: 'eu', ES: 'eu', NL: 'eu', PL: 'eu',
+  RU: 'eu', TR: 'eu', CH: 'eu', SE: 'eu', NO: 'eu', FI: 'eu', IE: 'eu',
+  BE: 'eu', AT: 'eu', PT: 'eu', GR: 'eu', CZ: 'eu', RO: 'eu', HU: 'eu',
+  UA: 'eu', DK: 'eu', SK: 'eu', BG: 'eu', HR: 'eu', LT: 'eu', LV: 'eu',
+  EE: 'eu', SI: 'eu', RS: 'eu', BY: 'eu', MD: 'eu', AL: 'eu', MK: 'eu',
+  // Africa → EU (closest infra)
+  ZA: 'eu', EG: 'eu', NG: 'eu', KE: 'eu', MA: 'eu', GH: 'eu', TZ: 'eu',
+  ET: 'eu', DZ: 'eu', TN: 'eu', SN: 'eu', CI: 'eu', CM: 'eu', UG: 'eu',
+  // Asia-Pacific
+  JP: 'as', CN: 'as', IN: 'as', KR: 'as', SG: 'as', HK: 'as', TW: 'as',
+  TH: 'as', VN: 'as', ID: 'as', PH: 'as', MY: 'as', PK: 'as', BD: 'as',
+  AE: 'as', SA: 'as', IL: 'as', QA: 'as', KW: 'as', OM: 'as', BH: 'as',
+  IQ: 'as', IR: 'as', JO: 'as', LB: 'as', MM: 'as', KH: 'as', LK: 'as',
+  NP: 'as', MN: 'as', KZ: 'as', UZ: 'as', AZ: 'as', GE: 'as', AM: 'as',
+  // Oceania → Asia (nearest cluster)
+  AU: 'as', NZ: 'as', PG: 'as', FJ: 'as',
+};
+
+const DEFAULT_REGION: Region = 'eu';
+
+// NODE_REGION is either set directly via env, or derived from NODE_NAME using a static map.
+// This handles the case where k8s fieldRef cannot read node labels into pod env.
+const NODE_NAME_TO_REGION: Record<string, Region> = {
+  'node-ca1':           'am',
+  'node-de1':           'eu',
+  'node-uk1':           'eu',
+  'ubuntu-4gb-hel1-2':  'eu',
+  'node-sg1':           'as',
+  'srv1550395':         'as',
+  'srv1550435':         'sa',
+};
+
+const nodeName = process.env.NODE_NAME || '';
+const nodeRegionFromName = NODE_NAME_TO_REGION[nodeName];
+const NODE_REGION: Region = (process.env.NODE_REGION as Region) || nodeRegionFromName || DEFAULT_REGION;
+
+const REGIONAL_PREFIXES = new Set(['am', 'eu', 'as', 'sa']);
+
+// Regional subdomain pattern: {region}-{chain}.chainrpc.net
+// e.g. eu-ethereum.chainrpc.net, as-base.chainrpc.net
+// This is a single-level subdomain covered by *.chainrpc.net wildcard TLS.
+const REGIONAL_HOST_RE = /^(am|eu|as|sa)-/;
+
+function geoRouteMiddleware(req: Request, res: Response, next: NextFunction): void {
+  const host = (req.hostname || '').toLowerCase();
+
+  // Skip: already on a regional subdomain (e.g. eu-ethereum.chainrpc.net)
+  if (REGIONAL_HOST_RE.test(host)) {
+    next();
+    return;
+  }
+
+  // Skip: CF-IPCountry not present (not behind Cloudflare, internal, health checks)
+  const cfCountry = (req.headers['cf-ipcountry'] as string || '').toUpperCase().trim();
+  if (!cfCountry || cfCountry === 'XX' || cfCountry === 'T1') {
+    next();
+    return;
+  }
+
+  // Dev/testing override: ?country=JP lets us test without CF proxy
+  const testCountry = (req.query['country'] as string || '').toUpperCase().trim();
+  const country = (process.env.NODE_ENV !== 'production' && testCountry) ? testCountry : cfCountry;
+
+  const bestRegion: Region = COUNTRY_TO_REGION[country] || DEFAULT_REGION;
+
+  // Already in the right region — serve directly
+  if (bestRegion === NODE_REGION) {
+    next();
+    return;
+  }
+
+  // Redirect to regional endpoint: {region}-{chain}.chainrpc.net
+  // e.g. ethereum.chainrpc.net → as-ethereum.chainrpc.net
+  const newHost = `${bestRegion}-${host}`;
+  const newUrl = `https://${newHost}${req.originalUrl}`;
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.redirect(302, newUrl);
+}
 
 // ── In-memory TTL cache ─────────────────────────────────────────────
 
@@ -97,6 +190,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// ── Geo-routing middleware (must be before all route handlers) ───────
+app.use(geoRouteMiddleware);
+
 // ── Metrics counters ────────────────────────────────────────────────
 
 const metrics = {
@@ -121,8 +217,9 @@ app.get('/health', async (_req: Request, res: Response) => {
   const deadCount = Object.values(health).flat().filter(e => !e.alive).length;
   res.json({
     status: deadCount === 0 ? 'ok' : 'degraded',
-    version: '2.1.0',
-    routing: 'hostname-based ({chain}.chainrpc.net)',
+    version: '2.2.0',
+    routing: 'geo-routed hostname-based ({region}.{chain}.chainrpc.net)',
+    nodeRegion: NODE_REGION,
     chains: listPublicChainInfo(),
     cache: { entries: cache.size },
     apiKeys: apiKeyStore.size,
@@ -393,9 +490,9 @@ console.log(`[Internal] Registered internal key (${INTERNAL_KEY.substring(0, 8)}
 
 app.listen(PORT, () => {
   const chains = listChains();
-  console.log(`ChainRPC proxy v2.1.0 listening on :${PORT}`);
+  console.log(`ChainRPC proxy v2.2.0 listening on :${PORT}`);
   console.log(`Supported chains (${chains.length}): ${chains.join(', ')}`);
-  console.log(`Routing: hostname-based ({chain}.chainrpc.net)`);
+  console.log(`Routing: geo-routed ({region}.{chain}.chainrpc.net), this node region: ${NODE_REGION}`);
 
   if (process.env.NODE_ENV !== 'production') {
     console.log('Seeding demo API keys:');
