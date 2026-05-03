@@ -2,7 +2,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 COPY tsconfig.json *.ts ./
 RUN npx tsc
 
@@ -12,7 +12,7 @@ WORKDIR /app
 RUN addgroup -g 1001 -S rpcaas && adduser -S rpcaas -u 1001 -G rpcaas
 
 COPY --from=builder /app/package.json /app/package-lock.json* ./
-RUN npm ci --omit=dev --ignore-scripts
+RUN npm install --omit=dev --ignore-scripts
 
 COPY --from=builder /app/dist ./dist
 
